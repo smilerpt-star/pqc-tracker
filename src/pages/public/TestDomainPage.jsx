@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, ArrowRight, CheckCircle, AlertTriangle, Info, XCircle, Shield, Lock, Globe } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Alert, ScoreBadge, StatusBadge } from '../../components/shared/UI.jsx'
@@ -38,6 +38,13 @@ export default function TestDomainPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [monitoredDomains, setMonitoredDomains] = useState([])
+
+  useEffect(() => {
+    api.getDomains()
+      .then(r => setMonitoredDomains((unwrap(r) || []).filter(d => d.active !== false)))
+      .catch(() => {})
+  }, [])
 
   async function handleTest(e) {
     e.preventDefault()
@@ -56,7 +63,11 @@ export default function TestDomainPage() {
     }
   }
 
-  const inputValid = domain.trim().length > 3
+  const inputValid = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(domain.trim())
+
+  const monitoredEntry = result
+    ? monitoredDomains.find(d => d.domain?.toLowerCase() === result.domain?.toLowerCase())
+    : null
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-16">
@@ -255,15 +266,31 @@ export default function TestDomainPage() {
 
           {/* Submit for monitoring CTA */}
           <div className="card p-5 border-accent/10">
-            <p className="text-xs text-secondary mb-3">
-              Want to track <strong className="text-primary">{result.domain}</strong> continuously?
-            </p>
-            <Link
-              to={`/submit?domain=${encodeURIComponent(result.domain)}`}
-              className="btn-primary text-xs inline-flex items-center gap-2"
-            >
-              Submit for Monitoring <ArrowRight size={11} />
-            </Link>
+            {monitoredEntry ? (
+              <>
+                <p className="text-xs text-secondary mb-3">
+                  <strong className="text-primary">{result.domain}</strong> is already being continuously monitored.
+                </p>
+                <Link
+                  to={`/domain/${monitoredEntry.id}`}
+                  className="btn-primary text-xs inline-flex items-center gap-2"
+                >
+                  View Monitoring Details <ArrowRight size={11} />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-secondary mb-3">
+                  Want to track <strong className="text-primary">{result.domain}</strong> continuously?
+                </p>
+                <Link
+                  to={`/submit?domain=${encodeURIComponent(result.domain)}`}
+                  className="btn-primary text-xs inline-flex items-center gap-2"
+                >
+                  Submit for Monitoring <ArrowRight size={11} />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

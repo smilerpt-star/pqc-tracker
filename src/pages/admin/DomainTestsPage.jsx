@@ -282,6 +282,13 @@ export default function DomainTestsPage() {
               </select>
             </FormField>
 
+            {modal?.mode === 'create' && form.domain_id && form.test_type_id && (domainTests || []).some(
+              dt => String(dt.domain_id || dt.domainId) === form.domain_id &&
+                    String(dt.test_type_id || dt.testTypeId) === form.test_type_id
+            ) && (
+              <p className="text-xs text-warn -mt-2">This domain already has this test type assigned.</p>
+            )}
+
             <div className="border border-void rounded-sm p-4 flex flex-col gap-4">
               <Toggle
                 checked={form.schedule_enabled}
@@ -312,7 +319,7 @@ export default function DomainTestsPage() {
             <div className="flex gap-3 pt-2 border-t border-void">
               <button
                 type="submit"
-                disabled={saving || !form.domain_id || !form.test_type_id}
+                disabled={saving || !form.domain_id || !form.test_type_id || (modal?.mode === 'create' && (domainTests || []).some(dt => String(dt.domain_id || dt.domainId) === form.domain_id && String(dt.test_type_id || dt.testTypeId) === form.test_type_id))}
                 className="btn-primary"
               >
                 {saving ? 'Saving…' : modal?.mode === 'create' ? 'Add Domain Test' : 'Save Changes'}

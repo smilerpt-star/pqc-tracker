@@ -187,6 +187,11 @@ export default function DomainsPage() {
                 required
                 spellCheck={false}
               />
+              {modal?.mode === 'create' && form.domain.trim() && (domains || []).some(
+                d => d.domain?.toLowerCase() === form.domain.trim().toLowerCase()
+              ) && (
+                <p className="text-xs text-warn mt-1">This domain already exists.</p>
+              )}
             </FormField>
 
             <FormField label="Organisation">
@@ -226,7 +231,7 @@ export default function DomainsPage() {
             <Toggle checked={form.active} onChange={v => set('active', v)} label="Active monitoring" />
 
             <div className="flex gap-3 pt-2 border-t border-void">
-              <button type="submit" disabled={saving || !form.domain.trim()} className="btn-primary">
+              <button type="submit" disabled={saving || !form.domain.trim() || (modal?.mode === 'create' && (domains || []).some(d => d.domain?.toLowerCase() === form.domain.trim().toLowerCase()))} className="btn-primary">
                 {saving ? 'Saving…' : modal?.mode === 'create' ? 'Add Domain' : 'Save Changes'}
               </button>
               <button type="button" onClick={closeModal} className="btn-ghost">Cancel</button>

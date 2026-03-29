@@ -154,6 +154,9 @@ export default function TestTypesPage() {
                   className="input-field"
                   required
                 />
+                {modal?.mode === 'create' && form.key && (testTypes || []).some(t => t.key === form.key) && (
+                  <p className="text-xs text-warn mt-1">This key is already in use.</p>
+                )}
               </FormField>
               <FormField label="Runner Type">
                 <select value={form.runner_type} onChange={e => set('runner_type', e.target.value)} className="select-field">
@@ -187,7 +190,7 @@ export default function TestTypesPage() {
             <Toggle checked={form.active} onChange={v => set('active', v)} label="Active" />
 
             <div className="flex gap-3 pt-2 border-t border-void">
-              <button type="submit" disabled={saving || !form.key || !form.name} className="btn-primary">
+              <button type="submit" disabled={saving || !form.key || !form.name || (modal?.mode === 'create' && (testTypes || []).some(t => t.key === form.key))} className="btn-primary">
                 {saving ? 'Saving…' : modal?.mode === 'create' ? 'Add Test Type' : 'Save Changes'}
               </button>
               <button type="button" onClick={closeModal} className="btn-ghost">Cancel</button>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { CheckCircle2 } from 'lucide-react'
 import { FormField, Alert } from '../../components/shared/UI.jsx'
-import { api } from '../../lib/api.js'
+import { api, unwrap } from '../../lib/api.js'
 import { COUNTRIES, SECTORS } from '../../lib/utils.js'
 
 export default function SubmitDomainPage() {
@@ -18,8 +18,19 @@ export default function SubmitDomainPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState(null)
+  const [existingDomains, setExistingDomains] = useState([])
+
+  useEffect(() => {
+    api.getDomains()
+      .then(r => setExistingDomains(unwrap(r) || []))
+      .catch(() => {})
+  }, [])
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
+
+  const domainExists = form.domain.trim()
+    ? existingDomains.find(d => d.domain?.toLowerCase() === form.domain.trim().toLowerCase() && d.active !== false)
+    : null
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -104,6 +115,14 @@ export default function SubmitDomainPage() {
               spellCheck={false}
               autoComplete="off"
             />
+            {domainExists && (
+              <div className="mt-2 text-xs text-accent/80 bg-accent/5 border border-accent/20 rounded px-3 py-2">
+                This domain is already being monitored.{' '}
+                <Link to={`/domain/${domainExists.id}`} className="underline hover:text-accent">
+                  View current status →
+                </Link>
+              </div>
+            )}
           </FormField>
 
           <FormField label="Organisation / Company">
@@ -172,7 +191,7 @@ export default function SubmitDomainPage() {
         <div className="flex items-start gap-4 pt-2">
           <button
             type="submit"
-            disabled={!form.domain.trim() || loading}
+            disabled={!form.domain.trim() || loading || !!domainExists}
             className="btn-primary"
           >
             {loading ? 'Submitting…' : 'Submit Domain'}
