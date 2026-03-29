@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
       {/* Secondary stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="card p-4">
+        <Link to="/admin/domains" className="card p-4 block card-hover">
           <div className="section-title mb-4">Domain Activity</div>
           <div className="flex gap-6">
             <div>
@@ -75,8 +75,8 @@ export default function DashboardPage() {
               <div className="stat-label">Inactive</div>
             </div>
           </div>
-        </div>
-        <div className="card p-4">
+        </Link>
+        <Link to="/admin/runs" className="card p-4 block card-hover">
           <div className="section-title mb-4">Run Outcomes</div>
           <div className="flex gap-6">
             <div>
@@ -92,7 +92,7 @@ export default function DashboardPage() {
               <div className="stat-label">Other</div>
             </div>
           </div>
-        </div>
+        </Link>
         <div className="card p-4">
           <div className="section-title mb-4">Quick Actions</div>
           <div className="flex flex-col gap-2">

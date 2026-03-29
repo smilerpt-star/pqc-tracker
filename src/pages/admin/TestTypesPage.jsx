@@ -6,7 +6,7 @@ import {
   LoadingState, ErrorState, EmptyState, Modal, FormField, Alert, Toggle, ActiveBadge
 } from '../../components/shared/UI.jsx'
 
-const RUNNER_TYPES = ['tls_scan', 'pqc_placeholder']
+const RUNNER_TYPES = ['tls_scan']
 
 const EMPTY = {
   key: '', name: '', description: '', runner_type: '', active: true,

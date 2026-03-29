@@ -72,17 +72,22 @@ export default function ExplorePage() {
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-        {[
-          { label: 'Total Domains', value: stats.total },
-          { label: 'Active Monitoring', value: stats.active },
-          { label: 'Countries', value: stats.countries },
-          { label: 'Sectors', value: stats.sectors },
-        ].map(s => (
-          <div key={s.label} className="card px-4 py-3">
-            <div className="text-xl font-light text-primary">{s.value}</div>
-            <div className="stat-label">{s.label}</div>
-          </div>
-        ))}
+        <button onClick={() => setActiveFilter('all')} className={`card px-4 py-3 text-left w-full transition-colors ${activeFilter === 'all' ? 'ring-1 ring-accent/30' : ''}`}>
+          <div className="text-xl font-light text-primary">{stats.total}</div>
+          <div className="stat-label">Total Domains</div>
+        </button>
+        <button onClick={() => setActiveFilter('active')} className={`card px-4 py-3 text-left w-full transition-colors ${activeFilter === 'active' ? 'ring-1 ring-accent/30' : ''}`}>
+          <div className="text-xl font-light text-signal">{stats.active}</div>
+          <div className="stat-label">Active Monitoring</div>
+        </button>
+        <div className="card px-4 py-3">
+          <div className="text-xl font-light text-primary">{stats.countries}</div>
+          <div className="stat-label">Countries</div>
+        </div>
+        <div className="card px-4 py-3">
+          <div className="text-xl font-light text-primary">{stats.sectors}</div>
+          <div className="stat-label">Sectors</div>
+        </div>
       </div>
 
       {/* Filters */}

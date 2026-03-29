@@ -93,15 +93,19 @@ export default function RunsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {[
-          { label: 'Total Runs', value: statusCounts.total, cls: 'text-primary' },
-          { label: 'Passed', value: statusCounts.pass, cls: 'text-signal' },
-          { label: 'Failed', value: statusCounts.fail, cls: 'text-critical' },
-          { label: 'Other', value: statusCounts.other, cls: 'text-muted' },
+          { label: 'Total Runs', value: statusCounts.total, cls: 'text-primary', filter: 'all' },
+          { label: 'Passed', value: statusCounts.pass, cls: 'text-signal', filter: 'pass' },
+          { label: 'Failed', value: statusCounts.fail, cls: 'text-critical', filter: 'fail' },
+          { label: 'Other', value: statusCounts.other, cls: 'text-muted', filter: 'pending' },
         ].map(s => (
-          <div key={s.label} className="card px-4 py-3">
+          <button
+            key={s.label}
+            onClick={() => setStatusFilter(s.filter)}
+            className={`card px-4 py-3 text-left w-full transition-colors hover:border-void/80 ${statusFilter === s.filter ? 'ring-1 ring-accent/30' : ''}`}
+          >
             <div className={`text-xl font-light ${s.cls}`}>{s.value}</div>
             <div className="stat-label">{s.label}</div>
-          </div>
+          </button>
         ))}
       </div>
 
