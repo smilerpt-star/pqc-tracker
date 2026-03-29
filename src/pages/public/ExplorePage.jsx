@@ -9,6 +9,7 @@ import { formatDateShort, COUNTRIES, SECTORS } from '../../lib/utils.js'
 export default function ExplorePage() {
   const { data: domains, loading, error, reload } = useApi(() => api.getDomains())
   const { data: domainTests } = useApi(() => api.getDomainTests())
+  const { data: statsData } = useApi(() => api.getStats())
 
   const [search, setSearch] = useState('')
   const [country, setCountry] = useState('')
@@ -131,6 +132,50 @@ export default function ExplorePage() {
           )}
         </div>
       </div>
+
+      {/* Stats breakdown by country & sector */}
+      {statsData?.data && (statsData.data.by_country?.length > 0 || statsData.data.by_sector?.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* By Country */}
+          <div className="card overflow-hidden">
+            <div className="px-4 py-3 border-b border-void section-title">By Country</div>
+            <div className="divide-y divide-void/30 max-h-64 overflow-y-auto">
+              {(statsData.data.by_country || []).slice(0, 15).map(row => (
+                <div key={row.country} className="flex items-center justify-between px-4 py-2">
+                  <span className="text-xs text-secondary">{row.country}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] text-muted">{row.count} domain{row.count !== 1 ? 's' : ''}</span>
+                    {row.avg_score !== null ? (
+                      <span className={`text-xs font-mono ${row.avg_score >= 80 ? 'text-signal' : row.avg_score >= 50 ? 'text-warn' : 'text-critical'}`}>
+                        {row.avg_score}
+                      </span>
+                    ) : <span className="text-xs text-muted">—</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* By Sector */}
+          <div className="card overflow-hidden">
+            <div className="px-4 py-3 border-b border-void section-title">By Sector</div>
+            <div className="divide-y divide-void/30 max-h-64 overflow-y-auto">
+              {(statsData.data.by_sector || []).slice(0, 15).map(row => (
+                <div key={row.sector} className="flex items-center justify-between px-4 py-2">
+                  <span className="text-xs text-secondary">{row.sector}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] text-muted">{row.count} domain{row.count !== 1 ? 's' : ''}</span>
+                    {row.avg_score !== null ? (
+                      <span className={`text-xs font-mono ${row.avg_score >= 80 ? 'text-signal' : row.avg_score >= 50 ? 'text-warn' : 'text-critical'}`}>
+                        {row.avg_score}
+                      </span>
+                    ) : <span className="text-xs text-muted">—</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Results */}
       {loading && <LoadingState message="Loading domains…" />}

@@ -9,7 +9,9 @@ export default function PublicNav() {
   const links = [
     { to: '/test', label: 'Test Domain' },
     { to: '/explore', label: 'Explorer' },
-    { to: '/submit', label: 'Submit Domain' },
+    { to: '/methodology', label: 'Methodology' },
+    { to: '/transparency', label: 'About' },
+    { to: '/submit', label: 'Submit' },
   ]
 
   return (

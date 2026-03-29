@@ -49,6 +49,12 @@ export const api = {
   getRuns: () => request('/runs'),
   getRun: (id) => request(`/runs/${id}`),
 
+  // Stats (public)
+  getStats: () => request('/stats'),
+
+  // Domain-specific runs
+  getDomainRuns: (domainId, limit = 200) => request(`/runs?domain_id=${domainId}&limit=${limit}`),
+
   // Public: test any domain anonymously — POST /public/test { domain }
   publicTestDomain: (domain) => request('/public/test', {
     method: 'POST',

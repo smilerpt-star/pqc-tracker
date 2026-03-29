@@ -51,11 +51,28 @@ export function slugify(str) {
 }
 
 export const COUNTRIES = [
-  'Australia', 'Austria', 'Belgium', 'Brazil', 'Canada', 'China', 'Denmark',
-  'Finland', 'France', 'Germany', 'India', 'Ireland', 'Israel', 'Italy',
-  'Japan', 'Luxembourg', 'Netherlands', 'New Zealand', 'Norway', 'Portugal',
-  'Singapore', 'South Korea', 'Spain', 'Sweden', 'Switzerland',
-  'United Kingdom', 'United States', 'Other',
+  // Western Europe
+  'Andorra', 'Austria', 'Belgium', 'Cyprus', 'Denmark', 'Finland', 'France',
+  'Germany', 'Greece', 'Iceland', 'Ireland', 'Italy', 'Liechtenstein', 'Luxembourg',
+  'Malta', 'Monaco', 'Netherlands', 'Norway', 'Portugal', 'San Marino',
+  'Spain', 'Sweden', 'Switzerland', 'United Kingdom', 'Vatican City',
+  // Central & Eastern Europe
+  'Albania', 'Bosnia & Herzegovina', 'Bulgaria', 'Croatia', 'Czech Republic',
+  'Estonia', 'Hungary', 'Kosovo', 'Latvia', 'Lithuania', 'Moldova', 'Montenegro',
+  'North Macedonia', 'Poland', 'Romania', 'Serbia', 'Slovakia', 'Slovenia', 'Ukraine',
+  // CIS / Wider Europe
+  'Armenia', 'Azerbaijan', 'Belarus', 'Georgia', 'Kazakhstan', 'Russia', 'Turkey',
+  // Middle East & North Africa (MEA)
+  'Bahrain', 'Egypt', 'Iraq', 'Israel', 'Jordan', 'Kuwait', 'Lebanon', 'Libya',
+  'Morocco', 'Oman', 'Palestine', 'Qatar', 'Saudi Arabia', 'Tunisia',
+  'United Arab Emirates', 'Yemen',
+  // Sub-Saharan Africa
+  'Kenya', 'Nigeria', 'South Africa',
+  // Americas
+  'Brazil', 'Canada', 'United States',
+  // Asia-Pacific
+  'Australia', 'China', 'India', 'Japan', 'New Zealand', 'Singapore', 'South Korea',
+  'Other',
 ]
 
 export const SECTORS = [

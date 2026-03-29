@@ -10,7 +10,7 @@ const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/admin/domains', icon: Globe, label: 'Domains' },
   { to: '/admin/test-types', icon: FlaskConical, label: 'Test Types' },
-  { to: '/admin/domain-tests', icon: Link2, label: 'Domain Tests' },
+  { to: '/admin/domain-tests', icon: Link2, label: 'Schedules' },
   { to: '/admin/runs', icon: Play, label: 'Runs' },
 ]
 

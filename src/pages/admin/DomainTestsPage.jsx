@@ -119,14 +119,14 @@ export default function DomainTestsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="section-title mb-2">Management</p>
-          <h1 className="page-title">Domain Tests</h1>
+          <h1 className="page-title">Schedules</h1>
         </div>
         <div className="flex gap-3">
           <button onClick={reload} className="btn-ghost flex items-center gap-2">
             <RefreshCw size={12} /> Refresh
           </button>
           <button onClick={openCreate} className="btn-primary flex items-center gap-2">
-            <Plus size={13} /> Add Domain Test
+            <Plus size={13} /> Add Schedule
           </button>
         </div>
       </div>
@@ -244,7 +244,7 @@ export default function DomainTestsPage() {
       <Modal
         open={!!modal}
         onClose={closeModal}
-        title={modal?.mode === 'create' ? 'Add Domain Test' : 'Edit Domain Test'}
+        title={modal?.mode === 'create' ? 'Add Schedule' : 'Edit Schedule'}
       >
         {saveSuccess ? (
           <div className="text-center py-6">
@@ -322,7 +322,7 @@ export default function DomainTestsPage() {
                 disabled={saving || !form.domain_id || !form.test_type_id || (modal?.mode === 'create' && (domainTests || []).some(dt => String(dt.domain_id || dt.domainId) === form.domain_id && String(dt.test_type_id || dt.testTypeId) === form.test_type_id))}
                 className="btn-primary"
               >
-                {saving ? 'Saving…' : modal?.mode === 'create' ? 'Add Domain Test' : 'Save Changes'}
+                {saving ? 'Saving…' : modal?.mode === 'create' ? 'Add Schedule' : 'Save Changes'}
               </button>
               <button type="button" onClick={closeModal} className="btn-ghost">Cancel</button>
             </div>

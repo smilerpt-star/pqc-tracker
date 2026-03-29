@@ -8,22 +8,84 @@ import {
 } from '../../components/shared/UI.jsx'
 import { formatDate, formatDateShort, scoreColor } from '../../lib/utils.js'
 
+function ScoreChart({ runs }) {
+  if (!runs || runs.length < 2) return null
+  const sorted = [...runs]
+    .filter(r => r.score !== null && r.score !== undefined)
+    .sort((a, b) => new Date(a.started_at || a.createdAt) - new Date(b.started_at || b.createdAt))
+  if (sorted.length < 2) return null
+
+  const W = 600, H = 160, PX = 36, PY = 16
+  const iW = W - PX * 2, iH = H - PY * 2
+
+  const dates = sorted.map(r => new Date(r.started_at || r.createdAt).getTime())
+  const minT = dates[0], maxT = dates[dates.length - 1], rangeT = maxT - minT || 1
+  const toX = t => PX + ((t - minT) / rangeT) * iW
+  const toY = s => PY + iH - (Math.max(0, Math.min(100, s)) / 100) * iH
+
+  const pts = sorted.map((r, i) => ({ x: toX(dates[i]), y: toY(r.score), r }))
+  const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+  const areaD = `${lineD} L${pts[pts.length - 1].x.toFixed(1)},${(PY + iH).toFixed(1)} L${pts[0].x.toFixed(1)},${(PY + iH).toFixed(1)}Z`
+
+  const yTicks = [0, 25, 50, 75, 100]
+  const scoreCol = s => s >= 80 ? '#22c55e' : s >= 50 ? '#f59e0b' : '#ef4444'
+
+  // X-axis date labels: show first, middle, last
+  const xLabels = [pts[0], pts[Math.floor(pts.length / 2)], pts[pts.length - 1]]
+  const fmtShort = ts => new Date(ts).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+
+  return (
+    <div className="card overflow-hidden">
+      <div className="px-5 py-3 border-b border-void flex items-center justify-between">
+        <span className="section-title">Score History</span>
+        <span className="text-[10px] text-muted tracking-wider">{sorted.length} scans</span>
+      </div>
+      <div className="px-2 pt-3 pb-4">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 160 }}>
+          <defs>
+            <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#00d4ff" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="#00d4ff" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {yTicks.map(s => (
+            <g key={s}>
+              <line x1={PX} y1={toY(s)} x2={PX + iW} y2={toY(s)} stroke="#1a2035" strokeWidth={s === 50 ? 1.5 : 1} />
+              <text x={PX - 5} y={toY(s) + 4} fontSize="9" fill="#3a4560" textAnchor="end">{s}</text>
+            </g>
+          ))}
+          <path d={areaD} fill="url(#sg)" />
+          <path d={lineD} fill="none" stroke="#00d4ff" strokeWidth="1.5" strokeLinejoin="round" />
+          {pts.map((p, i) => (
+            <circle key={i} cx={p.x} cy={p.y} r="3.5" fill={scoreCol(p.r.score)} stroke="#080d1a" strokeWidth="1.5" />
+          ))}
+          {xLabels.map((p, i) => (
+            <text key={i} x={p.x} y={H - 2} fontSize="9" fill="#3a4560" textAnchor="middle">
+              {fmtShort(p.r.started_at || p.r.createdAt)}
+            </text>
+          ))}
+        </svg>
+      </div>
+    </div>
+  )
+}
+
 export default function DomainDetailPage() {
   const { id } = useParams()
   const [selectedRun, setSelectedRun] = useState(null)
 
   const { data: domains, loading: dLoading, error: dError } = useApi(() => api.getDomains())
   const { data: domainTests, loading: tLoading } = useApi(() => api.getDomainTests())
-  const { data: runs, loading: rLoading, reload: reloadRuns } = useApi(() => api.getRuns())
+  const { data: runs, loading: rLoading, reload: reloadRuns } = useApi(() => api.getDomainRuns(id))
 
   const domain = (domains || []).find(d => String(d.id) === String(id))
   const tests = (domainTests || []).filter(t =>
     t.domain_id === domain?.id || t.domainId === domain?.id || t.domain?.id === domain?.id
   )
-  const testIds = new Set(tests.map(t => t.id))
-  const domainRuns = (runs || [])
-    .filter(r => testIds.has(r.domain_test_id || r.domainTestId))
-    .sort((a, b) => new Date(b.started_at || b.createdAt || 0) - new Date(a.started_at || a.createdAt || 0))
+
+  const domainRuns = (runs || []).sort((a, b) =>
+    new Date(b.started_at || b.createdAt || 0) - new Date(a.started_at || a.createdAt || 0)
+  )
 
   const loading = dLoading || tLoading || rLoading
 
@@ -145,6 +207,13 @@ export default function DomainDetailPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Score history chart */}
+      {domainRuns.length >= 2 && (
+        <div className="mb-6">
+          <ScoreChart runs={domainRuns} />
         </div>
       )}
 
