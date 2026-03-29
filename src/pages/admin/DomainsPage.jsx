@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Plus, Search, RefreshCw, Pencil } from 'lucide-react'
+import { Plus, Search, RefreshCw, Pencil, CheckSquare, Square } from 'lucide-react'
 import { useApi, useApiMutation } from '../../hooks/useApi.js'
 import { api, unwrap } from '../../lib/api.js'
 import {
@@ -21,6 +21,8 @@ export default function DomainsPage() {
   const [modal, setModal] = useState(null) // null | { mode: 'create'|'edit', domain }
   const [form, setForm] = useState(EMPTY)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [selected, setSelected] = useState(new Set())
+  const [approving, setApproving] = useState(false)
 
   const filtered = useMemo(() => {
     return (domains || []).filter(d => {
@@ -79,6 +81,32 @@ export default function DomainsPage() {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
+  const inactiveDomains = useMemo(() => (domains || []).filter(d => d.active === false), [domains])
+
+  function toggleSelect(id) {
+    setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
+  function selectAllInactive() {
+    if (inactiveDomains.every(d => selected.has(d.id))) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(inactiveDomains.map(d => d.id)))
+    }
+  }
+
+  async function approveSelected() {
+    if (!selected.size) return
+    setApproving(true)
+    try {
+      await Promise.all([...selected].map(id => api.updateDomain(id, { active: true })))
+      setSelected(new Set())
+      reload()
+    } finally {
+      setApproving(false)
+    }
+  }
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
@@ -86,7 +114,22 @@ export default function DomainsPage() {
           <p className="section-title mb-2">Management</p>
           <h1 className="page-title">Domains</h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
+          {inactiveDomains.length > 0 && (
+            <button onClick={selectAllInactive} className="btn-ghost flex items-center gap-2 text-xs">
+              <CheckSquare size={12} />
+              {inactiveDomains.every(d => selected.has(d.id)) ? 'Deselect' : `Select Pending (${inactiveDomains.length})`}
+            </button>
+          )}
+          {selected.size > 0 && (
+            <button
+              onClick={approveSelected}
+              disabled={approving}
+              className="btn-primary flex items-center gap-2 text-xs bg-signal/80 hover:bg-signal border-signal/50"
+            >
+              {approving ? 'Approving…' : `Approve ${selected.size} Domain${selected.size !== 1 ? 's' : ''}`}
+            </button>
+          )}
           <button onClick={reload} className="btn-ghost flex items-center gap-2">
             <RefreshCw size={12} /> Refresh
           </button>
@@ -128,6 +171,7 @@ export default function DomainsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-void">
+                    <th className="table-header w-8" />
                     <th className="table-header text-left">Domain</th>
                     <th className="table-header text-left hidden md:table-cell">Organisation</th>
                     <th className="table-header text-left hidden lg:table-cell">Country</th>
@@ -139,7 +183,14 @@ export default function DomainsPage() {
                 </thead>
                 <tbody>
                   {filtered.map(d => (
-                    <tr key={d.id} className="table-row">
+                    <tr key={d.id} className={`table-row ${selected.has(d.id) ? 'bg-accent/5' : ''}`}>
+                      <td className="table-cell w-8">
+                        {d.active === false && (
+                          <button onClick={() => toggleSelect(d.id)} className="text-muted hover:text-accent transition-colors">
+                            {selected.has(d.id) ? <CheckSquare size={13} className="text-accent" /> : <Square size={13} />}
+                          </button>
+                        )}
+                      </td>
                       <td className="table-cell font-medium text-xs text-primary">{d.domain}</td>
                       <td className="table-cell hidden md:table-cell text-xs">{d.company_name || '—'}</td>
                       <td className="table-cell hidden lg:table-cell text-xs">{d.country || '—'}</td>
