@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Shield, Search, Database, Globe2, Lock, Cpu, AlertTriangle } from 'lucide-react'
 import { api, unwrap } from '../../lib/api.js'
 
 const STATS_REFRESH = 30000
 
 export default function HomePage() {
+  const navigate = useNavigate()
   const [stats, setStats] = useState(null)
+  const [testInput, setTestInput] = useState('')
+
+  function handleHeroTest(e) {
+    e.preventDefault()
+    const d = testInput.trim()
+    if (d) navigate(`/test?domain=${encodeURIComponent(d)}`)
+  }
 
   useEffect(() => {
     async function load() {
@@ -55,20 +63,38 @@ export default function HomePage() {
               Readiness Tracking
             </h1>
 
-            <p className="text-base text-secondary leading-relaxed mb-3 max-w-xl">
+            <p className="text-base text-secondary leading-relaxed mb-8 max-w-xl">
               Continuous external monitoring of TLS posture, certificate hygiene,
               and post-quantum cryptography readiness across internet-facing domains.
             </p>
-            <p className="text-sm text-muted leading-relaxed mb-10 max-w-xl">
-              Track how organisations across sectors and regions are preparing — or failing to prepare —
-              for the quantum computing threat to today's encryption.
-            </p>
+
+            {/* Inline domain test */}
+            <form onSubmit={handleHeroTest} className="mb-4 max-w-xl">
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                  <input
+                    type="text"
+                    value={testInput}
+                    onChange={e => setTestInput(e.target.value)}
+                    placeholder="enter a domain — e.g. cloudflare.com"
+                    className="input-field pl-9 h-10 text-sm"
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!testInput.trim()}
+                  className="btn-primary h-10 px-5 flex items-center gap-2 whitespace-nowrap text-xs"
+                >
+                  Test Now <ArrowRight size={12} />
+                </button>
+              </div>
+              <p className="text-xs text-muted mt-2">Live TLS scan — no account required.</p>
+            </form>
 
             <div className="flex flex-wrap gap-3">
-              <Link to="/test" className="btn-primary flex items-center gap-2 text-xs">
-                <Search size={13} />
-                Test a Domain
-              </Link>
               <Link to="/explore" className="btn-secondary flex items-center gap-2 text-xs">
                 <Globe2 size={13} />
                 Browse Explorer

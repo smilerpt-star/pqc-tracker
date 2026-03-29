@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Search, ArrowRight, CheckCircle, AlertTriangle, Info, XCircle, Shield, Lock, Globe } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Alert, ScoreBadge, StatusBadge } from '../../components/shared/UI.jsx'
 import { api, unwrap } from '../../lib/api.js'
 
@@ -34,7 +34,8 @@ function MetaRow({ label, value, mono }) {
 }
 
 export default function TestDomainPage() {
-  const [domain, setDomain] = useState('')
+  const [searchParams] = useSearchParams()
+  const [domain, setDomain] = useState(() => searchParams.get('domain') || '')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
@@ -46,21 +47,30 @@ export default function TestDomainPage() {
       .catch(() => {})
   }, [])
 
-  async function handleTest(e) {
-    e.preventDefault()
-    if (!domain.trim()) return
+  const runScan = useCallback(async (target) => {
     setLoading(true)
     setError(null)
     setResult(null)
-
     try {
-      const raw = await api.publicTestDomain(domain.trim())
+      const raw = await api.publicTestDomain(target)
       setResult(unwrap(raw))
     } catch (err) {
       setError(err.message || 'Scan failed')
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  // Auto-run if domain was passed via URL param (e.g. from homepage hero)
+  useEffect(() => {
+    const urlDomain = searchParams.get('domain')
+    if (urlDomain) runScan(urlDomain.trim())
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleTest(e) {
+    e.preventDefault()
+    if (!domain.trim()) return
+    runScan(domain.trim())
   }
 
   const inputValid = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(domain.trim())
