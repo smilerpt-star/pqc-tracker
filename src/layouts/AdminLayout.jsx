@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { Outlet, NavLink, Link } from 'react-router-dom'
+import { Outlet, NavLink, Link, Navigate } from 'react-router-dom'
 import {
   Shield, LayoutDashboard, Globe, FlaskConical, Link2,
-  Play, ChevronLeft, Menu, ExternalLink
+  Play, ChevronLeft, LogOut, ExternalLink
 } from 'lucide-react'
+import { getToken, clearToken } from '../lib/api.js'
 
 const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
@@ -15,6 +16,13 @@ const navItems = [
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
+
+  if (!getToken()) return <Navigate to="/admin/login" replace />
+
+  function handleLogout() {
+    clearToken()
+    window.location.href = '/admin/login'
+  }
 
   return (
     <div className="min-h-screen bg-void flex">
@@ -78,6 +86,14 @@ export default function AdminLayout() {
             <ExternalLink size={13} className="flex-shrink-0" />
             {!collapsed && <span className="text-xs tracking-wider uppercase">Public Site</span>}
           </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-2 py-2 text-muted hover:text-critical transition-colors w-full"
+            title="Sign Out"
+          >
+            <LogOut size={13} className="flex-shrink-0" />
+            {!collapsed && <span className="text-xs tracking-wider uppercase">Sign Out</span>}
+          </button>
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="flex items-center gap-3 px-2 py-2 text-muted hover:text-secondary transition-colors w-full"

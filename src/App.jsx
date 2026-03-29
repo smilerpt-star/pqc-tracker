@@ -17,6 +17,7 @@ import DomainsPage from './pages/admin/DomainsPage.jsx'
 import TestTypesPage from './pages/admin/TestTypesPage.jsx'
 import DomainTestsPage from './pages/admin/DomainTestsPage.jsx'
 import RunsPage from './pages/admin/RunsPage.jsx'
+import LoginPage from './pages/admin/LoginPage.jsx'
 
 export default function App() {
   return (
@@ -30,6 +31,9 @@ export default function App() {
           <Route path="/submit" element={<SubmitDomainPage />} />
           <Route path="/domain/:id" element={<DomainDetailPage />} />
         </Route>
+
+        {/* Admin login (outside AdminLayout so it's accessible without token) */}
+        <Route path="/admin/login" element={<LoginPage />} />
 
         {/* Admin routes */}
         <Route path="/admin" element={<AdminLayout />}>

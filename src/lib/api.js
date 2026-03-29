@@ -1,9 +1,18 @@
 const BASE = import.meta.env.VITE_API_BASE_URL || 'https://pqc-readiness-tracker-production.up.railway.app'
 
+export function getToken() { return localStorage.getItem('admin_token') }
+export function setToken(t) { localStorage.setItem('admin_token', t) }
+export function clearToken() { localStorage.removeItem('admin_token') }
+
 async function request(path, options = {}) {
   const url = `${BASE}${path}`
+  const token = getToken()
   const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
     ...options,
   })
   if (!res.ok) {
@@ -45,6 +54,9 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ domain }),
   }),
+
+  // Auth
+  verifyToken: (token) => request('/auth/verify', { headers: { 'Authorization': `Bearer ${token}` } }),
 }
 
 export function unwrap(response) {
