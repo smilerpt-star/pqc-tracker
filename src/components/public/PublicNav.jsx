@@ -7,11 +7,11 @@ export default function PublicNav() {
   const location = useLocation()
 
   const links = [
-    { to: '/test', label: 'Test Domain' },
+    { to: '/observatory', label: 'Observatory' },
     { to: '/explore', label: 'Explorer' },
+    { to: '/test', label: 'Test Domain' },
     { to: '/methodology', label: 'Methodology' },
     { to: '/transparency', label: 'About' },
-    { to: '/submit', label: 'Submit' },
   ]
 
   return (

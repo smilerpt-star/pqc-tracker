@@ -12,6 +12,7 @@ import SubmitDomainPage from './pages/public/SubmitDomainPage.jsx'
 import DomainDetailPage from './pages/public/DomainDetailPage.jsx'
 import MethodologyPage from './pages/public/MethodologyPage.jsx'
 import TransparencyPage from './pages/public/TransparencyPage.jsx'
+import ObservatoryPage from './pages/public/ObservatoryPage.jsx'
 
 // Admin pages
 import DashboardPage from './pages/admin/DashboardPage.jsx'
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/domain/:id" element={<DomainDetailPage />} />
           <Route path="/methodology" element={<MethodologyPage />} />
           <Route path="/transparency" element={<TransparencyPage />} />
+          <Route path="/observatory" element={<ObservatoryPage />} />
         </Route>
 
         {/* Admin login (outside AdminLayout so it's accessible without token) */}
