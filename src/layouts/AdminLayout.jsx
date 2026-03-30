@@ -2,16 +2,17 @@ import React, { useState } from 'react'
 import { Outlet, NavLink, Link, Navigate } from 'react-router-dom'
 import {
   Shield, LayoutDashboard, Globe, FlaskConical, Link2,
-  Play, ChevronLeft, LogOut, ExternalLink
+  Play, ChevronLeft, LogOut, ExternalLink, Layers
 } from 'lucide-react'
 import { getToken, clearToken } from '../lib/api.js'
 
 const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/admin/domains', icon: Globe, label: 'Domains' },
+  { to: '/admin/indexes', icon: Layers, label: 'Indexes' },
   { to: '/admin/test-types', icon: FlaskConical, label: 'Test Types' },
-  { to: '/admin/domain-tests', icon: Link2, label: 'Schedules' },
   { to: '/admin/runs', icon: Play, label: 'Runs' },
+  { to: '/admin/scheduler', icon: Link2, label: 'Scheduler' },
 ]
 
 export default function AdminLayout() {

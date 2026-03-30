@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Globe, FlaskConical, Link2, Play, RefreshCw, ArrowRight } from 'lucide-react'
+import { Globe, FlaskConical, Link2, Play, RefreshCw, ArrowRight, Layers } from 'lucide-react'
 import { useApi } from '../../hooks/useApi.js'
 import { api } from '../../lib/api.js'
 import { LoadingState, StatusBadge, ScoreBadge } from '../../components/shared/UI.jsx'
@@ -96,8 +96,11 @@ export default function DashboardPage() {
         <div className="card p-4">
           <div className="section-title mb-4">Quick Actions</div>
           <div className="flex flex-col gap-2">
-            <Link to="/admin/domain-tests" className="btn-secondary text-xs flex items-center justify-between">
-              Manage Domain Tests <ArrowRight size={11} />
+            <Link to="/admin/scheduler" className="btn-secondary text-xs flex items-center justify-between">
+              Scheduler <ArrowRight size={11} />
+            </Link>
+            <Link to="/admin/indexes" className="btn-secondary text-xs flex items-center justify-between">
+              Indexes <ArrowRight size={11} />
             </Link>
             <Link to="/admin/domains" className="btn-ghost text-xs flex items-center justify-between">
               Add Domain <ArrowRight size={11} />

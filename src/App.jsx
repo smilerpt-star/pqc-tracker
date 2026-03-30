@@ -20,6 +20,8 @@ import TestTypesPage from './pages/admin/TestTypesPage.jsx'
 import DomainTestsPage from './pages/admin/DomainTestsPage.jsx'
 import RunsPage from './pages/admin/RunsPage.jsx'
 import LoginPage from './pages/admin/LoginPage.jsx'
+import IndexesPage from './pages/admin/IndexesPage.jsx'
+import SchedulerPage from './pages/admin/SchedulerPage.jsx'
 
 export default function App() {
   return (
@@ -46,6 +48,8 @@ export default function App() {
           <Route path="test-types" element={<TestTypesPage />} />
           <Route path="domain-tests" element={<DomainTestsPage />} />
           <Route path="runs" element={<RunsPage />} />
+          <Route path="indexes" element={<IndexesPage />} />
+          <Route path="scheduler" element={<SchedulerPage />} />
         </Route>
 
         {/* Fallback */}

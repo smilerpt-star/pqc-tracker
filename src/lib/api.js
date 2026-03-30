@@ -46,7 +46,7 @@ export const api = {
   runDomainTest: (id) => request(`/domain-tests/${id}/run`, { method: 'POST' }),
 
   // Runs
-  getRuns: () => request('/runs'),
+  getRuns: (limit) => request(limit ? `/runs?limit=${limit}` : '/runs'),
   getRun: (id) => request(`/runs/${id}`),
 
   // Stats (public)
@@ -60,6 +60,22 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ domain }),
   }),
+
+  // Indexes
+  getIndexes: () => request('/indexes'),
+  getIndex: (id) => request(`/indexes/${id}`),
+  createIndex: (data) => request('/indexes', { method: 'POST', body: JSON.stringify(data) }),
+  updateIndex: (id, data) => request(`/indexes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  getIndexDomains: (id) => request(`/indexes/${id}/domains`),
+  importToIndex: (id, rows) => request(`/indexes/${id}/import`, { method: 'POST', body: JSON.stringify({ rows }) }),
+
+  // Config
+  getConfig: () => request('/config'),
+  updateConfig: (data) => request('/config', { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Scheduler
+  runNow: () => request('/scheduler/run-now', { method: 'POST' }),
+  schedulerStatus: () => request('/scheduler/status'),
 
   // Auth
   verifyToken: (token) => request('/auth/verify', { headers: { 'Authorization': `Bearer ${token}` } }),
