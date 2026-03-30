@@ -165,7 +165,7 @@ export function ScoreBadge({ score }) {
   if (score === null || score === undefined) return <span className="badge-neutral">N/A</span>
   let cls = 'badge-critical'
   if (score >= 80) cls = 'badge-success'
-  else if (score >= 50) cls = 'badge-warn'
+  else if (score >= 40) cls = 'badge-warn'
   return <span className={cls}>{score}</span>
 }
 

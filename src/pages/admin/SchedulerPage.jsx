@@ -204,7 +204,7 @@ export default function SchedulerPage() {
                   </td>
                   <td className="table-cell text-right">
                     {run.score !== null && run.score !== undefined ? (
-                      <span className={`text-xs font-mono ${run.score >= 80 ? 'text-signal' : run.score >= 50 ? 'text-warn' : 'text-critical'}`}>
+                      <span className={`text-xs font-mono ${run.score >= 80 ? 'text-signal' : run.score >= 40 ? 'text-warn' : 'text-critical'}`}>
                         {run.score}
                       </span>
                     ) : <span className="text-xs text-muted">—</span>}

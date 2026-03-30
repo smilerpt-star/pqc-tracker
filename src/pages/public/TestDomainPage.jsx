@@ -35,7 +35,7 @@ function MetaRow({ label, value, mono }) {
 }
 
 function ScoreBar({ label, score, myScore, color }) {
-  const barColor = score >= 80 ? '#00ff88' : score >= 40 ? '#f59e0b' : '#ef4444'
+  const barColor = score >= 80 ? '#00ff88' : score >= 40 ? '#f59e0b' : '#ef4444' // canonical tiers
   const diff = myScore !== null && score !== null ? myScore - score : null
   return (
     <div className="flex items-center gap-3">
@@ -225,12 +225,12 @@ export default function TestDomainPage() {
                   className="h-full rounded-full transition-all"
                   style={{
                     width: `${result.score}%`,
-                    background: result.score >= 75 ? '#22c55e' : result.score >= 50 ? '#f59e0b' : '#ef4444',
+                    background: result.score >= 80 ? '#00ff88' : result.score >= 40 ? '#f59e0b' : '#ef4444',
                   }}
                 />
               </div>
               <div className="flex justify-between text-[10px] text-muted mt-1 tracking-wider uppercase">
-                <span>Legacy</span><span>Partial</span><span>PQC-Ready</span>
+                <span>Legacy</span><span>Transitioning</span><span>PQC-Active</span>
               </div>
             </div>
           </div>

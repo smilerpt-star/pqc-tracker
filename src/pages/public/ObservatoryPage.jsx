@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { RefreshCw, TrendingUp, Globe2, Shield, ArrowRight } from 'lucide-react'
 import { useApi } from '../../hooks/useApi.js'
 import { api } from '../../lib/api.js'
 import { LoadingState, ErrorState } from '../../components/shared/UI.jsx'
-import { formatDateShort } from '../../lib/utils.js'
+import { formatDateShort, SCORE_TIERS } from '../../lib/utils.js'
 
 // ── Inline SVG charts (no deps) ───────────────────────────────────────────────
 
@@ -31,27 +31,55 @@ function ScoreGauge({ score }) {
 }
 
 function DistributionChart({ data }) {
+  const [hovered, setHovered] = useState(null)
   if (!data?.length) return null
+
+  const tierMeta = { legacy: SCORE_TIERS[0], transitioning: SCORE_TIERS[1], pqc_active: SCORE_TIERS[2] }
   const max = Math.max(...data.map(d => d.count), 1)
-  const W = 320, H = 80, BAR_W = 44, GAP = 20
-  const colors = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#00ff88']
+  const W = 360, H = 90, BAR_W = 90, GAP = 22
+  const totalBars = data.length
+  const totalWidth = totalBars * BAR_W + (totalBars - 1) * GAP
+  const offsetX = (W - totalWidth) / 2
 
   return (
-    <svg viewBox={`0 0 ${W} ${H + 24}`} className="w-full max-w-xs">
-      {data.map((d, i) => {
-        const h = Math.max(2, Math.round((d.count / max) * H))
-        const x = i * (BAR_W + GAP)
+    <div className="relative w-full">
+      <svg viewBox={`0 0 ${W} ${H + 24}`} className="w-full max-w-sm mx-auto">
+        {data.map((d, i) => {
+          const meta = tierMeta[d.key] || {}
+          const h = Math.max(3, Math.round((d.count / max) * H))
+          const x = offsetX + i * (BAR_W + GAP)
+          const color = meta.color || '#6b7280'
+          return (
+            <g
+              key={d.key || d.label}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              style={{ cursor: 'default' }}
+            >
+              <rect x={x} y={H - h} width={BAR_W} height={h} fill={color} opacity={hovered === i ? 1 : 0.75} rx={3} />
+              <text x={x + BAR_W / 2} y={H + 12} textAnchor="middle" fill="#6b7280" fontSize={9}>{d.label}</text>
+              <text x={x + BAR_W / 2} y={H - h - 4} textAnchor="middle" fill={color} fontSize={10} fontWeight="500">{d.count}</text>
+            </g>
+          )
+        })}
+      </svg>
+      {/* Tooltip */}
+      {hovered !== null && data[hovered] && (() => {
+        const d = data[hovered]
+        const meta = tierMeta[d.key] || {}
         return (
-          <g key={d.label}>
-            <rect x={x} y={H - h} width={BAR_W} height={h} fill={colors[i]} opacity={0.8} rx={2} />
-            <text x={x + BAR_W / 2} y={H + 12} textAnchor="middle" fill="#6b7280" fontSize={9}>{d.label}</text>
-            {d.count > 0 && (
-              <text x={x + BAR_W / 2} y={H - h - 3} textAnchor="middle" fill={colors[i]} fontSize={9}>{d.count}</text>
-            )}
-          </g>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-surface border border-void rounded px-3 py-2 shadow-lg pointer-events-none z-10">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: meta.color }} />
+              <span className="text-xs font-medium text-primary">{d.label}</span>
+              <span className="text-xs text-muted ml-auto font-mono">{meta.range}</span>
+            </div>
+            <p className="text-[10px] text-secondary leading-relaxed">{meta.desc}</p>
+            <div className="mt-1.5 text-[10px] text-muted">{d.count} organisation{d.count !== 1 ? 's' : ''}</div>
+          </div>
         )
-      })}
-    </svg>
+      })()}
+    </div>
   )
 }
 
@@ -190,9 +218,9 @@ export default function ObservatoryPage() {
                 <DistributionChart data={stats.score_distribution} />
                 <div className="w-full grid grid-cols-3 gap-2">
                   {[
-                    { label: 'PQC Active',  key: 'pqc_ready',   color: 'text-signal'   },
-                    { label: 'In Progress', key: 'pqc_partial', color: 'text-warn'     },
-                    { label: 'Legacy',      key: 'pqc_legacy',  color: 'text-critical' },
+                    { label: 'PQC-Active',     key: 'pqc_ready',   color: 'text-signal'   },
+                    { label: 'Transitioning', key: 'pqc_partial', color: 'text-warn'     },
+                    { label: 'Legacy',         key: 'pqc_legacy',  color: 'text-critical' },
                   ].map(b => (
                     <div key={b.key} className="text-center">
                       <div className={`text-lg font-light ${b.color}`}>{stats[b.key]?.pct ?? 0}%</div>

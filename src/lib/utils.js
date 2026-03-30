@@ -17,19 +17,36 @@ export function formatDateShort(str) {
   } catch { return str }
 }
 
+// Canonical score tiers (must match statsService thresholds):
+//   PQC-Active   >= 80  — hybrid PQC key exchange active
+//   Transitioning 40–79 — good TLS hygiene, no PQC KEM yet
+//   Legacy        < 40  — classical crypto, quantum-vulnerable
 export function scoreColor(score) {
   if (score === null || score === undefined) return 'text-secondary'
   if (score >= 80) return 'text-signal'
-  if (score >= 50) return 'text-warn'
+  if (score >= 40) return 'text-warn'
   return 'text-critical'
 }
 
 export function scoreBadgeClass(score) {
   if (score === null || score === undefined) return 'badge-neutral'
   if (score >= 80) return 'badge-success'
-  if (score >= 50) return 'badge-warn'
+  if (score >= 40) return 'badge-warn'
   return 'badge-critical'
 }
+
+export function scoreTier(score) {
+  if (score === null || score === undefined) return null
+  if (score >= 80) return 'PQC-Active'
+  if (score >= 40) return 'Transitioning'
+  return 'Legacy'
+}
+
+export const SCORE_TIERS = [
+  { key: 'legacy',        label: 'Legacy',        range: '0–39',  color: '#ef4444', desc: 'Classical RSA/ECC. No post-quantum key exchange. Vulnerable to harvest-now-decrypt-later.' },
+  { key: 'transitioning', label: 'Transitioning',  range: '40–79', color: '#f59e0b', desc: 'Good TLS hygiene but no PQC key exchange yet. Partial readiness — migration pending.' },
+  { key: 'pqc_active',   label: 'PQC-Active',     range: '80–100', color: '#00ff88', desc: 'Post-quantum hybrid key exchange active (e.g. X25519MLKEM768). Resistant to quantum-enabled decryption.' },
+]
 
 export function statusBadgeClass(status) {
   if (!status) return 'badge-neutral'

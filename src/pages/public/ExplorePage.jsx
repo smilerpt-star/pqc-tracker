@@ -147,7 +147,7 @@ export default function ExplorePage() {
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] text-muted">{row.count} domain{row.count !== 1 ? 's' : ''}</span>
                     {row.avg_score !== null ? (
-                      <span className={`text-xs font-mono ${row.avg_score >= 80 ? 'text-signal' : row.avg_score >= 50 ? 'text-warn' : 'text-critical'}`}>
+                      <span className={`text-xs font-mono ${row.avg_score >= 80 ? 'text-signal' : row.avg_score >= 40 ? 'text-warn' : 'text-critical'}`}>
                         {row.avg_score}
                       </span>
                     ) : <span className="text-xs text-muted">—</span>}
@@ -166,7 +166,7 @@ export default function ExplorePage() {
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] text-muted">{row.count} domain{row.count !== 1 ? 's' : ''}</span>
                     {row.avg_score !== null ? (
-                      <span className={`text-xs font-mono ${row.avg_score >= 80 ? 'text-signal' : row.avg_score >= 50 ? 'text-warn' : 'text-critical'}`}>
+                      <span className={`text-xs font-mono ${row.avg_score >= 80 ? 'text-signal' : row.avg_score >= 40 ? 'text-warn' : 'text-critical'}`}>
                         {row.avg_score}
                       </span>
                     ) : <span className="text-xs text-muted">—</span>}
