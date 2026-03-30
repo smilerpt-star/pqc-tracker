@@ -27,8 +27,8 @@ function ScoreChart({ runs }) {
   const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
   const areaD = `${lineD} L${pts[pts.length - 1].x.toFixed(1)},${(PY + iH).toFixed(1)} L${pts[0].x.toFixed(1)},${(PY + iH).toFixed(1)}Z`
 
-  const yTicks = [0, 25, 50, 75, 100]
-  const scoreCol = s => s >= 80 ? '#22c55e' : s >= 50 ? '#f59e0b' : '#ef4444'
+  const yTicks = [0, 40, 80, 100]
+  const scoreCol = s => s >= 80 ? '#00ff88' : s >= 40 ? '#f59e0b' : '#ef4444'
 
   // X-axis date labels: show first, middle, last
   const xLabels = [pts[0], pts[Math.floor(pts.length / 2)], pts[pts.length - 1]]
@@ -50,7 +50,7 @@ function ScoreChart({ runs }) {
           </defs>
           {yTicks.map(s => (
             <g key={s}>
-              <line x1={PX} y1={toY(s)} x2={PX + iW} y2={toY(s)} stroke="#1a2035" strokeWidth={s === 50 ? 1.5 : 1} />
+              <line x1={PX} y1={toY(s)} x2={PX + iW} y2={toY(s)} stroke="#1a2035" strokeWidth={s === 80 ? 1.5 : 1} />
               <text x={PX - 5} y={toY(s) + 4} fontSize="9" fill="#3a4560" textAnchor="end">{s}</text>
             </g>
           ))}

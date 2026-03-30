@@ -108,9 +108,9 @@ export default function MethodologyPage() {
 
         <div className="grid grid-cols-3 gap-3">
           {[
-            { range: '0 – 49', label: 'Legacy', color: 'text-critical', desc: 'No meaningful PQC posture. Quantum-vulnerable by current standards.' },
-            { range: '50 – 79', label: 'Partial', color: 'text-warn', desc: 'Some modern TLS practices in place, but no active PQC key exchange.' },
-            { range: '80 – 100', label: 'Readying', color: 'text-signal', desc: 'Active PQC hybrid key exchange detected. On the right trajectory.' },
+            { range: '0 – 39', label: 'Legacy', color: 'text-critical', desc: 'Classical RSA/ECC cryptography. No post-quantum key exchange. Vulnerable to harvest-now-decrypt-later attacks.' },
+            { range: '40 – 79', label: 'Transitioning', color: 'text-warn', desc: 'Good TLS hygiene but no PQC key exchange yet. Migration underway or planned.' },
+            { range: '80 – 100', label: 'PQC-Active', color: 'text-signal', desc: 'Post-quantum hybrid key exchange active (e.g. X25519MLKEM768). Resistant to quantum-enabled decryption of intercepted traffic.' },
           ].map(s => (
             <div key={s.label} className="card p-4">
               <div className={`text-lg font-light ${s.color} mb-1`}>{s.range}</div>
