@@ -8,7 +8,6 @@ import AdminLayout from './layouts/AdminLayout.jsx'
 import HomePage from './pages/public/HomePage.jsx'
 import TestDomainPage from './pages/public/TestDomainPage.jsx'
 import ExplorePage from './pages/public/ExplorePage.jsx'
-import SubmitDomainPage from './pages/public/SubmitDomainPage.jsx'
 import DomainDetailPage from './pages/public/DomainDetailPage.jsx'
 import MethodologyPage from './pages/public/MethodologyPage.jsx'
 import TransparencyPage from './pages/public/TransparencyPage.jsx'
@@ -33,7 +32,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/test" element={<TestDomainPage />} />
           <Route path="/explore" element={<ExplorePage />} />
-          <Route path="/submit" element={<SubmitDomainPage />} />
+          <Route path="/submit" element={<Navigate to="/test" replace />} />
           <Route path="/domain/:id" element={<DomainDetailPage />} />
           <Route path="/methodology" element={<MethodologyPage />} />
           <Route path="/transparency" element={<TransparencyPage />} />

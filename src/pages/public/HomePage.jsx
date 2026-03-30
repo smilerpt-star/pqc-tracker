@@ -95,13 +95,13 @@ export default function HomePage() {
             </form>
 
             <div className="flex flex-wrap gap-3">
-              <Link to="/explore" className="btn-secondary flex items-center gap-2 text-xs">
+              <Link to="/observatory" className="btn-secondary flex items-center gap-2 text-xs">
                 <Globe2 size={13} />
-                Browse Explorer
+                Observatory
               </Link>
-              <Link to="/submit" className="btn-ghost flex items-center gap-2 text-xs">
+              <Link to="/explore" className="btn-ghost flex items-center gap-2 text-xs">
                 <Database size={13} />
-                Submit a Domain
+                Browse Explorer
               </Link>
             </div>
           </div>
@@ -198,8 +198,8 @@ export default function HomePage() {
             <Link to="/test" className="btn-primary flex items-center gap-2 text-xs">
               Test Now <ArrowRight size={12} />
             </Link>
-            <Link to="/submit" className="btn-secondary text-xs">
-              Add to Monitoring
+            <Link to="/observatory" className="btn-secondary flex items-center gap-2 text-xs">
+              Observatory <ArrowRight size={12} />
             </Link>
           </div>
         </div>

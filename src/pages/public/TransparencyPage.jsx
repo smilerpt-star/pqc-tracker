@@ -99,7 +99,7 @@ export default function TransparencyPage() {
           <div className="text-xs font-medium text-primary mb-1">Contact</div>
           <p className="text-xs text-secondary">
             For questions about our scanning programme, data removal requests, or methodology queries,
-            use the <Link to="/submit" className="text-accent/80 hover:text-accent underline">Submit</Link> page
+            see the <Link to="/methodology" className="text-accent/80 hover:text-accent underline">Methodology</Link> page
             or explore our dataset in the <Link to="/explore" className="text-accent/80 hover:text-accent underline">Explorer</Link>.
           </p>
         </div>
