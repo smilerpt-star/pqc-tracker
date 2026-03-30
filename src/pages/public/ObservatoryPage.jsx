@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { RefreshCw, TrendingUp, Globe2, Shield, AlertTriangle } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { RefreshCw, TrendingUp, Globe2, Shield, ArrowRight } from 'lucide-react'
 import { useApi } from '../../hooks/useApi.js'
 import { api } from '../../lib/api.js'
 import { LoadingState, ErrorState } from '../../components/shared/UI.jsx'
@@ -102,6 +102,7 @@ function TrendChart({ data }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function ObservatoryPage() {
+  const navigate = useNavigate()
   const { data: statsData, loading, error, reload } = useApi(() => api.getStats())
   const stats = statsData?.data || statsData || null
 
@@ -223,15 +224,22 @@ export default function ObservatoryPage() {
               </div>
               <div className="divide-y divide-void/30 max-h-96 overflow-y-auto">
                 {topCountries.map(row => (
-                  <div key={row.country} className="px-4 py-2 flex items-center gap-3">
+                  <button
+                    key={row.country}
+                    onClick={() => navigate(`/explore?country=${encodeURIComponent(row.country)}`)}
+                    className="w-full px-4 py-2 flex items-center gap-3 hover:bg-void/30 transition-colors text-left group"
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-secondary truncate">{row.country}</span>
-                        <ScoreGauge score={row.avg_score} />
+                        <span className="text-xs text-secondary truncate group-hover:text-primary transition-colors">{row.country}</span>
+                        <div className="flex items-center gap-2">
+                          <ScoreGauge score={row.avg_score} />
+                          <ArrowRight size={10} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </div>
                       <ScoreBar value={row.count} max={maxCountryCount} color="#3b82f6" />
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -243,28 +251,27 @@ export default function ObservatoryPage() {
               </div>
               <div className="divide-y divide-void/30 max-h-96 overflow-y-auto">
                 {topSectors.map(row => (
-                  <div key={row.sector} className="px-4 py-2 flex items-center justify-between">
+                  <button
+                    key={row.sector}
+                    onClick={() => navigate(`/explore?sector=${encodeURIComponent(row.sector)}`)}
+                    className="w-full px-4 py-2 flex items-center justify-between hover:bg-void/30 transition-colors text-left group"
+                  >
                     <div className="flex-1 min-w-0 mr-4">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-secondary truncate">{row.sector}</span>
-                        <ScoreGauge score={row.avg_score} />
+                        <span className="text-xs text-secondary truncate group-hover:text-primary transition-colors">{row.sector}</span>
+                        <div className="flex items-center gap-2">
+                          <ScoreGauge score={row.avg_score} />
+                          <ArrowRight size={10} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1 bg-void rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${row.scored > 0 ? Math.round(row.pqc_ready / row.scored * 100) : 0}%`,
-                              background: '#00ff88'
-                            }}
-                          />
+                          <div className="h-full rounded-full" style={{ width: `${row.scored > 0 ? Math.round(row.pqc_ready / row.scored * 100) : 0}%`, background: '#00ff88' }} />
                         </div>
-                        <span className="text-[10px] text-muted w-16 text-right">
-                          {row.pqc_ready}/{row.scored} PQC
-                        </span>
+                        <span className="text-[10px] text-muted w-16 text-right">{row.pqc_ready}/{row.scored} PQC</span>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

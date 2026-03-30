@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Search, Filter, Globe2, RefreshCw } from 'lucide-react'
 import { useApi } from '../../hooks/useApi.js'
 import { api, unwrap } from '../../lib/api.js'
@@ -11,9 +11,10 @@ export default function ExplorePage() {
   const { data: domainTests } = useApi(() => api.getDomainTests())
   const { data: statsData } = useApi(() => api.getStats())
 
+  const [searchParams] = useSearchParams()
   const [search, setSearch] = useState('')
-  const [country, setCountry] = useState('')
-  const [sector, setSector] = useState('')
+  const [country, setCountry] = useState(() => searchParams.get('country') || '')
+  const [sector, setSector] = useState(() => searchParams.get('sector') || '')
   const [activeFilter, setActiveFilter] = useState('all')
 
   const allDomains = useMemo(() => domains || [], [domains])
