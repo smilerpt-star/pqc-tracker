@@ -38,7 +38,7 @@ function DonutChart({ data, avgScore }) {
   const total = data.reduce((s, d) => s + d.count, 0)
   if (!total) return null
 
-  const CX = 70, CY = 70, R_OUT = 56, R_IN = 36, GAP = 2.5
+  const CX = 70, CY = 70, R_OUT = 60, R_IN = 43
 
   const toRad = deg => (deg - 90) * Math.PI / 180
   const pt = (r, deg) => [
@@ -57,21 +57,21 @@ function DonutChart({ data, avgScore }) {
     ].join(' ')
   }
 
-  // Build segments (skip zero-count tiers)
+  // Build segments — stroke on background colour creates clean gap, no manual gap needed
   let cursor = 0
   const segments = data
     .filter(d => d.count > 0)
     .map(d => {
       const sweep = (d.count / total) * 360
-      const s = cursor + GAP / 2
-      const e = cursor + sweep - GAP / 2
+      const s = cursor
+      const e = cursor + sweep
       cursor += sweep
       return { ...d, s, e, pct: Math.round(d.count / total * 100) }
     })
 
   return (
     <div className="relative flex flex-col items-center gap-4">
-      <svg viewBox="0 0 140 140" className="w-40 h-40">
+      <svg viewBox="0 0 140 140" className="w-44 h-44">
         {segments.map((seg, i) => {
           const meta = tierMeta[seg.key] || {}
           return (
@@ -79,7 +79,9 @@ function DonutChart({ data, avgScore }) {
               key={seg.key}
               d={arcPath(seg.s, seg.e)}
               fill={meta.color || '#6b7280'}
-              opacity={hovered === null ? 0.85 : hovered === i ? 1 : 0.35}
+              stroke="#050810"
+              strokeWidth="2"
+              opacity={hovered === null ? 0.88 : hovered === i ? 1 : 0.3}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
               style={{ cursor: 'pointer', transition: 'opacity 0.15s' }}
@@ -89,15 +91,17 @@ function DonutChart({ data, avgScore }) {
         {/* Center: avg score + org count */}
         {avgScore !== null && avgScore !== undefined ? (() => {
           const c = avgScore >= 80 ? '#00ff88' : avgScore >= 40 ? '#f59e0b' : '#ef4444'
-          const tier = avgScore >= 80 ? 'PQC-ACTIVE' : avgScore >= 40 ? 'TRANSITIONING' : 'LEGACY'
           return (<>
-            <text x={CX} y={CY - 10} textAnchor="middle" fill={c} fontSize="24" fontWeight="300">{avgScore}</text>
-            <text x={CX} y={CY + 5}  textAnchor="middle" fill="#4b5563" fontSize="6.5" letterSpacing="1.2">AVG SCORE</text>
-            <text x={CX} y={CY + 17} textAnchor="middle" fill="#374151" fontSize="6.5" letterSpacing="0.8">{total} orgs</text>
+            <text x={CX} y={CY + 10} textAnchor="middle" fill={c}
+              fontSize="32" fontWeight="200" fontFamily="monospace">{avgScore}</text>
+            <text x={CX} y={CY + 24} textAnchor="middle" fill="#374151"
+              fontSize="6" letterSpacing="1.8">AVG SCORE</text>
+            <text x={CX} y={CY - 12} textAnchor="middle" fill="#4b5563"
+              fontSize="6.5" letterSpacing="0.5">{total} orgs scored</text>
           </>)
         })() : (<>
-          <text x={CX} y={CY - 4} textAnchor="middle" fill="#e5e7eb" fontSize="20" fontWeight="300">{total}</text>
-          <text x={CX} y={CY + 10} textAnchor="middle" fill="#6b7280" fontSize="7" letterSpacing="1.5">ORGS</text>
+          <text x={CX} y={CY + 6}  textAnchor="middle" fill="#e5e7eb" fontSize="22" fontWeight="300">{total}</text>
+          <text x={CX} y={CY + 18} textAnchor="middle" fill="#6b7280" fontSize="7" letterSpacing="1.5">ORGS</text>
         </>)}
       </svg>
 
