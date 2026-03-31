@@ -6,7 +6,64 @@ import { api } from '../../lib/api.js'
 import { LoadingState, ErrorState } from '../../components/shared/UI.jsx'
 import { formatDateShort, SCORE_TIERS } from '../../lib/utils.js'
 
-// ── Inline SVG charts (no deps) ───────────────────────────────────────────────
+// ── Circular gauge ─────────────────────────────────────────────────────────────
+
+function CircularGauge({ score }) {
+  if (score === null || score === undefined) return (
+    <div className="w-40 h-40 flex items-center justify-center text-muted text-xs">—</div>
+  )
+  const CX = 70, CY = 70, R = 52
+  const START = 150   // degrees clockwise from 12 o'clock
+  const SWEEP = 240   // total arc degrees
+  const color = score >= 80 ? '#00ff88' : score >= 40 ? '#f59e0b' : '#ef4444'
+  const tier  = score >= 80 ? 'PQC-ACTIVE' : score >= 40 ? 'TRANSITIONING' : 'LEGACY'
+
+  const toRad = deg => (deg - 90) * Math.PI / 180
+  const pt = (deg) => ({
+    x: CX + R * Math.cos(toRad(deg)),
+    y: CY + R * Math.sin(toRad(deg)),
+  })
+  const arc = (from, to) => {
+    const s = pt(from), e = pt(to)
+    const large = (to - from) > 180 ? 1 : 0
+    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${R} ${R} 0 ${large} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`
+  }
+
+  const endDeg = START + (score / 100) * SWEEP
+
+  return (
+    <svg viewBox="0 0 140 140" className="w-36 h-36">
+      {/* Track */}
+      <path d={arc(START, START + SWEEP)} fill="none" stroke="#1a2035" strokeWidth="9" strokeLinecap="round" />
+      {/* Score arc */}
+      {score > 0 && (
+        <path d={arc(START, endDeg)} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round" />
+      )}
+      {/* Glow */}
+      {score > 0 && (
+        <path d={arc(START, endDeg)} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round"
+          style={{ filter: 'blur(4px)', opacity: 0.3 }} />
+      )}
+      {/* Score */}
+      <text x={CX} y={CY - 7} textAnchor="middle" fill={color}
+        fontSize="26" fontWeight="300" fontFamily="monospace">{score}</text>
+      <text x={CX} y={CY + 8} textAnchor="middle" fill="#4b5563"
+        fontSize="7.5" letterSpacing="1.5">AVG SCORE</text>
+      <text x={CX} y={CY + 21} textAnchor="middle" fill={color}
+        fontSize="7" letterSpacing="1">{tier}</text>
+    </svg>
+  )
+}
+
+// ── Mini score gauge (inline, for tables) ─────────────────────────────────────
+
+function ScoreGauge({ score }) {
+  if (score === null || score === undefined) return <span className="text-muted text-xs">—</span>
+  const color = score >= 80 ? '#00ff88' : score >= 40 ? '#f59e0b' : '#ef4444'
+  return <span className="font-mono text-sm" style={{ color }}>{score}</span>
+}
+
+// ── Horizontal bar ─────────────────────────────────────────────────────────────
 
 function ScoreBar({ value, max, color = 'var(--accent)' }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
@@ -20,15 +77,7 @@ function ScoreBar({ value, max, color = 'var(--accent)' }) {
   )
 }
 
-function ScoreGauge({ score }) {
-  if (score === null || score === undefined) return <span className="text-muted text-xs">—</span>
-  const color = score >= 80 ? '#00ff88' : score >= 40 ? '#f59e0b' : '#ef4444'
-  return (
-    <span className="font-mono text-sm" style={{ color }}>
-      {score}
-    </span>
-  )
-}
+// ── Distribution chart ────────────────────────────────────────────────────────
 
 function DistributionChart({ data }) {
   const [hovered, setHovered] = useState(null)
@@ -37,8 +86,7 @@ function DistributionChart({ data }) {
   const tierMeta = { legacy: SCORE_TIERS[0], transitioning: SCORE_TIERS[1], pqc_active: SCORE_TIERS[2] }
   const max = Math.max(...data.map(d => d.count), 1)
   const W = 360, H = 90, BAR_W = 90, GAP = 22
-  const totalBars = data.length
-  const totalWidth = totalBars * BAR_W + (totalBars - 1) * GAP
+  const totalWidth = data.length * BAR_W + (data.length - 1) * GAP
   const offsetX = (W - totalWidth) / 2
 
   return (
@@ -50,20 +98,20 @@ function DistributionChart({ data }) {
           const x = offsetX + i * (BAR_W + GAP)
           const color = meta.color || '#6b7280'
           return (
-            <g
-              key={d.key || d.label}
+            <g key={d.key || d.label}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
               style={{ cursor: 'default' }}
             >
-              <rect x={x} y={H - h} width={BAR_W} height={h} fill={color} opacity={hovered === i ? 1 : 0.75} rx={3} />
+              <rect x={x} y={H - h} width={BAR_W} height={h}
+                fill={color} opacity={hovered === i ? 1 : 0.75} rx={3} />
               <text x={x + BAR_W / 2} y={H + 12} textAnchor="middle" fill="#6b7280" fontSize={9}>{d.label}</text>
-              <text x={x + BAR_W / 2} y={H - h - 4} textAnchor="middle" fill={color} fontSize={10} fontWeight="500">{d.count}</text>
+              <text x={x + BAR_W / 2} y={H - h - 4} textAnchor="middle"
+                fill={color} fontSize={10} fontWeight="500">{d.count}</text>
             </g>
           )
         })}
       </svg>
-      {/* Tooltip */}
       {hovered !== null && data[hovered] && (() => {
         const d = data[hovered]
         const meta = tierMeta[d.key] || {}
@@ -83,47 +131,157 @@ function DistributionChart({ data }) {
   )
 }
 
-function TrendChart({ data }) {
-  if (!data?.length) return (
-    <div className="text-xs text-muted text-center py-6 tracking-wider uppercase">No trend data yet — runs needed</div>
+// ── Trend chart ───────────────────────────────────────────────────────────────
+
+const PERIODS = [
+  { key: 'daily',   label: 'Daily',   dataKey: 'trend_daily',   dateKey: 'day'   },
+  { key: 'weekly',  label: 'Weekly',  dataKey: 'trend_weekly',  dateKey: 'week'  },
+  { key: 'monthly', label: 'Monthly', dataKey: 'trend_monthly', dateKey: 'month' },
+]
+
+function fmtDate(val, period) {
+  if (!val) return ''
+  if (period === 'monthly') {
+    const [y, m] = val.split('-')
+    return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m - 1]} '${y.slice(2)}`
+  }
+  // daily or weekly: 'YYYY-MM-DD' → 'DD MMM'
+  const [, m, d] = val.split('-')
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  return `${+d} ${months[+m - 1]}`
+}
+
+function TrendChart({ stats, period }) {
+  const [hoverIdx, setHoverIdx] = useState(null)
+
+  const periodCfg = PERIODS.find(p => p.key === period)
+  const data = stats?.[periodCfg.dataKey] || []
+
+  if (!data.length) return (
+    <div className="text-xs text-muted text-center py-10 tracking-wider uppercase">
+      No {period} data yet — more scans needed
+    </div>
   )
-  const W = 400, H = 80, PAD = 12
+
+  const W = 520, H = 130, PAD_L = 28, PAD_R = 16, PAD_T = 14, PAD_B = 24
+  const iW = W - PAD_L - PAD_R
+  const iH = H - PAD_T - PAD_B
+
   const scores = data.map(d => d.avg_score).filter(s => s !== null)
   if (!scores.length) return null
-  const minS = Math.max(0,  Math.min(...scores) - 5)
-  const maxS = Math.min(100, Math.max(...scores) + 5)
-  const xStep = (W - PAD * 2) / Math.max(data.length - 1, 1)
-  const yScale = s => H - PAD - ((s - minS) / (maxS - minS || 1)) * (H - PAD * 2)
 
-  const pts = data.map((d, i) => ({ x: PAD + i * xStep, y: yScale(d.avg_score ?? minS) }))
+  const minS = Math.max(0,  Math.min(...scores) - 8)
+  const maxS = Math.min(100, Math.max(...scores) + 8)
+
+  const xOf = i => PAD_L + (data.length < 2 ? iW / 2 : (i / (data.length - 1)) * iW)
+  const yOf = s => PAD_T + iH - ((s - minS) / (maxS - minS || 1)) * iH
+
+  const pts = data.map((d, i) => ({ x: xOf(i), y: yOf(d.avg_score ?? minS), d }))
   const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-  const area = `${line} L${pts[pts.length - 1].x},${H} L${pts[0].x},${H} Z`
+  const area = `${line} L${pts[pts.length - 1].x},${PAD_T + iH} L${PAD_L},${PAD_T + iH} Z`
+
+  // Evenly-spaced x-axis label indices (up to 6)
+  const labelCount = Math.min(data.length, 6)
+  const labelIdxs = data.length <= labelCount
+    ? data.map((_, i) => i)
+    : Array.from({ length: labelCount }, (_, i) => Math.round(i * (data.length - 1) / (labelCount - 1)))
+
+  // Tier gridlines that are within visible range
+  const tierLines = [
+    { s: 40, color: '#f59e0b18', dash: '4 3' },
+    { s: 80, color: '#00ff8818', dash: '4 3' },
+  ].filter(t => t.s > minS && t.s < maxS)
 
   return (
-    <svg viewBox={`0 0 ${W} ${H + 16}`} className="w-full">
-      <defs>
-        <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill="url(#tg)" />
-      <path d={line} fill="none" stroke="#3b82f6" strokeWidth="1.5" />
-      {pts.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={3} fill="#3b82f6" />
-      ))}
-      {/* first and last date labels */}
-      {data.length > 1 && (
-        <>
-          <text x={pts[0].x} y={H + 14} textAnchor="start" fill="#6b7280" fontSize={8}>
-            {data[0].week?.slice(5)}
+    <div className="relative select-none">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full"
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <defs>
+          <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* Tier gridlines */}
+        {tierLines.map(t => (
+          <g key={t.s}>
+            <line x1={PAD_L} y1={yOf(t.s)} x2={PAD_L + iW} y2={yOf(t.s)}
+              stroke={t.color} strokeWidth="1" strokeDasharray={t.dash} />
+            <text x={PAD_L - 3} y={yOf(t.s) + 3.5} textAnchor="end"
+              fill="#374151" fontSize="7">{t.s}</text>
+          </g>
+        ))}
+
+        {/* Y-axis min/max */}
+        <text x={PAD_L - 3} y={PAD_T + 3.5} textAnchor="end" fill="#374151" fontSize="7">{Math.round(maxS)}</text>
+        <text x={PAD_L - 3} y={PAD_T + iH + 3.5} textAnchor="end" fill="#374151" fontSize="7">{Math.round(minS)}</text>
+
+        {/* Area fill + line */}
+        <path d={area} fill="url(#trendGrad)" />
+        <path d={line} fill="none" stroke="#3b82f6" strokeWidth="1.5" />
+
+        {/* Hover crosshair */}
+        {hoverIdx !== null && (
+          <line
+            x1={pts[hoverIdx].x} y1={PAD_T}
+            x2={pts[hoverIdx].x} y2={PAD_T + iH}
+            stroke="#3b82f630" strokeWidth="1"
+          />
+        )}
+
+        {/* Data points */}
+        {pts.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x} cy={p.y}
+            r={hoverIdx === i ? 4.5 : 3}
+            fill={hoverIdx === i ? '#60a5fa' : '#3b82f6'}
+            stroke="#080d1a" strokeWidth="1.5"
+            onMouseEnter={() => setHoverIdx(i)}
+            style={{ cursor: 'crosshair', transition: 'r 0.1s' }}
+          />
+        ))}
+
+        {/* X-axis labels */}
+        {labelIdxs.map(i => (
+          <text key={i} x={pts[i].x} y={H - 6} textAnchor="middle" fill="#4b5563" fontSize="8">
+            {fmtDate(data[i][periodCfg.dateKey], period)}
           </text>
-          <text x={pts[pts.length - 1].x} y={H + 14} textAnchor="end" fill="#6b7280" fontSize={8}>
-            {data[data.length - 1].week?.slice(5)}
-          </text>
-        </>
-      )}
-    </svg>
+        ))}
+      </svg>
+
+      {/* Hover tooltip */}
+      {hoverIdx !== null && data[hoverIdx] && (() => {
+        const d = data[hoverIdx]
+        const score = d.avg_score
+        const color = score >= 80 ? '#00ff88' : score >= 40 ? '#f59e0b' : '#ef4444'
+        const tier = score >= 80 ? 'PQC-Active' : score >= 40 ? 'Transitioning' : 'Legacy'
+        const p = pts[hoverIdx]
+        const leftPct = ((p.x / W) * 100)
+        return (
+          <div
+            className="absolute pointer-events-none z-10 bg-surface border border-void rounded px-3 py-2 shadow-lg"
+            style={{
+              bottom: `${((H - p.y) / H * 100) + 5}%`,
+              left: `${Math.min(Math.max(leftPct, 12), 78)}%`,
+              transform: 'translateX(-50%)',
+              minWidth: '130px',
+            }}
+          >
+            <div className="text-[10px] text-muted mb-1 tracking-wider">
+              {fmtDate(d[periodCfg.dateKey], period)}
+            </div>
+            <div className="text-xl font-mono font-light" style={{ color }}>{score}</div>
+            <div className="text-[10px] text-muted">avg score · <span style={{ color }}>{tier}</span></div>
+            <div className="text-[10px] text-muted mt-0.5">{d.count} runs</div>
+          </div>
+        )
+      })()}
+    </div>
   )
 }
 
@@ -133,6 +291,7 @@ export default function ObservatoryPage() {
   const navigate = useNavigate()
   const { data: statsData, loading, error, reload } = useApi(() => api.getStats())
   const stats = statsData?.data || statsData || null
+  const [trendPeriod, setTrendPeriod] = useState('weekly')
 
   const topCountries = useMemo(() =>
     (stats?.by_country || []).filter(r => r.scored > 0).sort((a, b) => (b.avg_score ?? -1) - (a.avg_score ?? -1)).slice(0, 15),
@@ -169,25 +328,44 @@ export default function ObservatoryPage() {
 
       {!loading && !error && stats && (
         <>
-          {/* ── Headline numbers ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {[
-              { label: 'Organisations', value: stats.total_scored ?? stats.active_domains, color: 'text-primary' },
-              { label: 'Avg PQC Score', value: stats.avg_score !== null ? stats.avg_score : '—', color: stats.avg_score >= 80 ? 'text-signal' : stats.avg_score >= 40 ? 'text-warn' : 'text-critical' },
-              { label: 'PQC Active', value: stats.pqc_ready?.count ? `${stats.pqc_ready.count} (${stats.pqc_ready.pct}%)` : '0', color: 'text-signal' },
-              { label: 'Legacy TLS', value: stats.pqc_legacy?.count ? `${stats.pqc_legacy.count} (${stats.pqc_legacy.pct}%)` : '0', color: 'text-critical' },
-            ].map(s => (
-              <div key={s.label} className="card px-4 py-3">
-                <div className={`text-2xl font-light ${s.color}`}>{s.value}</div>
-                <div className="stat-label">{s.label}</div>
+          {/* ── Hero: gauge + key metrics ── */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+            {/* Circular gauge */}
+            <div className="card flex flex-col items-center justify-center py-6 gap-1">
+              <CircularGauge score={stats.avg_score} />
+              <p className="text-[10px] text-muted tracking-wider uppercase mt-1">Global Average</p>
+            </div>
+
+            {/* 3 metric cards */}
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="card px-4 py-4 flex flex-col justify-center">
+                <div className="text-2xl font-light text-primary">{stats.total_scored ?? stats.active_domains}</div>
+                <div className="stat-label">Organisations Scored</div>
+                <div className="text-[10px] text-muted mt-1">S&P 500 + STOXX 600</div>
               </div>
-            ))}
+              <div className="card px-4 py-4 flex flex-col justify-center">
+                <div className="text-2xl font-light text-signal">
+                  {stats.pqc_ready?.count ?? 0}
+                  <span className="text-sm text-muted font-normal ml-1">({stats.pqc_ready?.pct ?? 0}%)</span>
+                </div>
+                <div className="stat-label">PQC-Active</div>
+                <div className="text-[10px] text-muted mt-1">Hybrid KEM deployed</div>
+              </div>
+              <div className="card px-4 py-4 flex flex-col justify-center">
+                <div className="text-2xl font-light text-critical">
+                  {stats.pqc_legacy?.count ?? 0}
+                  <span className="text-sm text-muted font-normal ml-1">({stats.pqc_legacy?.pct ?? 0}%)</span>
+                </div>
+                <div className="stat-label">Legacy</div>
+                <div className="text-[10px] text-muted mt-1">No PQC key exchange</div>
+              </div>
+            </div>
           </div>
 
           {/* ── Index comparison + Distribution ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
-            {/* By index */}
             <div className="card overflow-hidden">
               <div className="px-4 py-3 border-b border-void section-title">By Index</div>
               <div className="divide-y divide-void/30">
@@ -200,27 +378,22 @@ export default function ObservatoryPage() {
                       </div>
                       <ScoreGauge score={idx.avg_score} />
                     </div>
-                    <ScoreBar
-                      value={idx.pqc_ready}
-                      max={idx.scored}
-                      color="#00ff88"
-                    />
+                    <ScoreBar value={idx.pqc_ready} max={idx.scored} color="#00ff88" />
                     <div className="text-[10px] text-muted mt-1">{idx.pct_ready}% PQC-active</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Score distribution */}
             <div className="card overflow-hidden">
               <div className="px-4 py-3 border-b border-void section-title">Score Distribution</div>
               <div className="px-4 py-6 flex flex-col items-center gap-4">
                 <DistributionChart data={stats.score_distribution} />
                 <div className="w-full grid grid-cols-3 gap-2">
                   {[
-                    { label: 'PQC-Active',     key: 'pqc_ready',   color: 'text-signal'   },
+                    { label: 'PQC-Active',    key: 'pqc_ready',   color: 'text-signal'   },
                     { label: 'Transitioning', key: 'pqc_partial', color: 'text-warn'     },
-                    { label: 'Legacy',         key: 'pqc_legacy',  color: 'text-critical' },
+                    { label: 'Legacy',        key: 'pqc_legacy',  color: 'text-critical' },
                   ].map(b => (
                     <div key={b.key} className="text-center">
                       <div className={`text-lg font-light ${b.color}`}>{stats[b.key]?.pct ?? 0}%</div>
@@ -234,18 +407,34 @@ export default function ObservatoryPage() {
 
           {/* ── Trend ── */}
           <div className="card overflow-hidden mb-6">
-            <div className="px-4 py-3 border-b border-void flex items-center gap-2 section-title">
-              <TrendingUp size={12} /> Weekly Avg Score Trend
+            <div className="px-4 py-3 border-b border-void flex items-center justify-between">
+              <div className="flex items-center gap-2 section-title">
+                <TrendingUp size={12} /> Avg Score Trend
+              </div>
+              <div className="flex gap-1">
+                {PERIODS.map(p => (
+                  <button
+                    key={p.key}
+                    onClick={() => setTrendPeriod(p.key)}
+                    className={`text-[10px] px-2.5 py-1 rounded tracking-wider uppercase transition-colors ${
+                      trendPeriod === p.key
+                        ? 'bg-accent/20 text-accent'
+                        : 'text-muted hover:text-secondary'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="px-4 py-4">
-              <TrendChart data={stats.trend_weekly} />
+              <TrendChart stats={stats} period={trendPeriod} />
             </div>
           </div>
 
           {/* ── Country + Sector ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
-            {/* By country */}
             <div className="card overflow-hidden">
               <div className="px-4 py-3 border-b border-void section-title flex items-center gap-2">
                 <Globe2 size={12} /> By Country <span className="text-muted font-normal">(ranked by avg score)</span>
@@ -272,7 +461,6 @@ export default function ObservatoryPage() {
               </div>
             </div>
 
-            {/* By sector */}
             <div className="card overflow-hidden">
               <div className="px-4 py-3 border-b border-void section-title flex items-center gap-2">
                 <Shield size={12} /> By Sector
@@ -294,7 +482,8 @@ export default function ObservatoryPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1 bg-void rounded-full overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${row.scored > 0 ? Math.round(row.pqc_ready / row.scored * 100) : 0}%`, background: '#00ff88' }} />
+                          <div className="h-full rounded-full"
+                            style={{ width: `${row.scored > 0 ? Math.round(row.pqc_ready / row.scored * 100) : 0}%`, background: '#00ff88' }} />
                         </div>
                         <span className="text-[10px] text-muted w-16 text-right">{row.pqc_ready}/{row.scored} PQC</span>
                       </div>
