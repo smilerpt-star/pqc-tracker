@@ -4,6 +4,7 @@ export function formatDate(str) {
     return new Date(str).toLocaleString('en-GB', {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit', hour12: false,
+      timeZone: 'UTC',
     })
   } catch { return str }
 }
@@ -13,6 +14,7 @@ export function formatDateShort(str) {
   try {
     return new Date(str).toLocaleDateString('en-GB', {
       day: '2-digit', month: 'short', year: 'numeric',
+      timeZone: 'UTC',
     })
   } catch { return str }
 }
