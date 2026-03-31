@@ -110,8 +110,8 @@ function DonutChart({ data, avgScore }) {
           return (
             <div
               key={seg.key}
-              className="flex items-center gap-2 px-1 py-0.5 rounded transition-colors cursor-default"
-              style={{ opacity: hovered === null || hovered === i ? 1 : 0.4 }}
+              className="flex items-center gap-2 px-1 py-0.5 rounded cursor-default"
+              style={{ opacity: hovered === null || hovered === i ? 1 : 0.4, transition: 'opacity 0.15s' }}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
             >
@@ -124,22 +124,19 @@ function DonutChart({ data, avgScore }) {
         })}
       </div>
 
-      {/* Hover tooltip */}
-      {hovered !== null && segments[hovered] && (() => {
-        const seg = segments[hovered]
-        const meta = tierMeta[seg.key] || {}
-        return (
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full w-60 bg-surface border border-void rounded px-3 py-2 shadow-lg pointer-events-none z-10">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: meta.color }} />
-              <span className="text-xs font-medium text-primary">{seg.label}</span>
-              <span className="text-xs text-muted ml-auto font-mono">{meta.range}</span>
-            </div>
-            <p className="text-[10px] text-secondary leading-relaxed">{meta.desc}</p>
-            <div className="mt-1.5 text-[10px] text-muted">{seg.count} organisations · {seg.pct}%</div>
-          </div>
-        )
-      })()}
+      {/* Inline description — no overflow issues */}
+      <div className="w-full min-h-[2.5rem] border-t border-void/40 pt-2">
+        {hovered !== null && segments[hovered] ? (() => {
+          const seg = segments[hovered]
+          const meta = tierMeta[seg.key] || {}
+          return (
+            <p className="text-[10px] text-secondary leading-relaxed" style={{ color: meta.color ? meta.color + 'cc' : undefined }}>
+              {meta.desc}
+            </p>
+          )
+        })() : (
+          <p className="text-[10px] text-muted">Hover a segment for details.</p>
+        )}
     </div>
   )
 }
