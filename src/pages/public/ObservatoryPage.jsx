@@ -6,55 +6,6 @@ import { api } from '../../lib/api.js'
 import { LoadingState, ErrorState } from '../../components/shared/UI.jsx'
 import { formatDateShort, SCORE_TIERS } from '../../lib/utils.js'
 
-// ── Circular gauge ─────────────────────────────────────────────────────────────
-
-function CircularGauge({ score }) {
-  if (score === null || score === undefined) return (
-    <div className="w-40 h-40 flex items-center justify-center text-muted text-xs">—</div>
-  )
-  const CX = 70, CY = 70, R = 52
-  const START = 150   // degrees clockwise from 12 o'clock
-  const SWEEP = 240   // total arc degrees
-  const color = score >= 80 ? '#00ff88' : score >= 40 ? '#f59e0b' : '#ef4444'
-  const tier  = score >= 80 ? 'PQC-ACTIVE' : score >= 40 ? 'TRANSITIONING' : 'LEGACY'
-
-  const toRad = deg => (deg - 90) * Math.PI / 180
-  const pt = (deg) => ({
-    x: CX + R * Math.cos(toRad(deg)),
-    y: CY + R * Math.sin(toRad(deg)),
-  })
-  const arc = (from, to) => {
-    const s = pt(from), e = pt(to)
-    const large = (to - from) > 180 ? 1 : 0
-    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${R} ${R} 0 ${large} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`
-  }
-
-  const endDeg = START + (score / 100) * SWEEP
-
-  return (
-    <svg viewBox="0 0 140 140" className="w-36 h-36">
-      {/* Track */}
-      <path d={arc(START, START + SWEEP)} fill="none" stroke="#1a2035" strokeWidth="9" strokeLinecap="round" />
-      {/* Score arc */}
-      {score > 0 && (
-        <path d={arc(START, endDeg)} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round" />
-      )}
-      {/* Glow */}
-      {score > 0 && (
-        <path d={arc(START, endDeg)} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round"
-          style={{ filter: 'blur(4px)', opacity: 0.3 }} />
-      )}
-      {/* Score */}
-      <text x={CX} y={CY - 7} textAnchor="middle" fill={color}
-        fontSize="26" fontWeight="300" fontFamily="monospace">{score}</text>
-      <text x={CX} y={CY + 8} textAnchor="middle" fill="#4b5563"
-        fontSize="7.5" letterSpacing="1.5">AVG SCORE</text>
-      <text x={CX} y={CY + 21} textAnchor="middle" fill={color}
-        fontSize="7" letterSpacing="1">{tier}</text>
-    </svg>
-  )
-}
-
 // ── Mini score gauge (inline, for tables) ─────────────────────────────────────
 
 function ScoreGauge({ score }) {
@@ -79,7 +30,7 @@ function ScoreBar({ value, max, color = 'var(--accent)' }) {
 
 // ── Donut distribution chart ──────────────────────────────────────────────────
 
-function DonutChart({ data }) {
+function DonutChart({ data, avgScore }) {
   const [hovered, setHovered] = useState(null)
   if (!data?.length) return null
 
@@ -135,9 +86,19 @@ function DonutChart({ data }) {
             />
           )
         })}
-        {/* Center */}
-        <text x={CX} y={CY - 5} textAnchor="middle" fill="#e5e7eb" fontSize="20" fontWeight="300">{total}</text>
-        <text x={CX} y={CY + 9} textAnchor="middle" fill="#6b7280" fontSize="7" letterSpacing="1.5">SCORED</text>
+        {/* Center: avg score + org count */}
+        {avgScore !== null && avgScore !== undefined ? (() => {
+          const c = avgScore >= 80 ? '#00ff88' : avgScore >= 40 ? '#f59e0b' : '#ef4444'
+          const tier = avgScore >= 80 ? 'PQC-ACTIVE' : avgScore >= 40 ? 'TRANSITIONING' : 'LEGACY'
+          return (<>
+            <text x={CX} y={CY - 10} textAnchor="middle" fill={c} fontSize="24" fontWeight="300">{avgScore}</text>
+            <text x={CX} y={CY + 5}  textAnchor="middle" fill="#4b5563" fontSize="6.5" letterSpacing="1.2">AVG SCORE</text>
+            <text x={CX} y={CY + 17} textAnchor="middle" fill="#374151" fontSize="6.5" letterSpacing="0.8">{total} orgs</text>
+          </>)
+        })() : (<>
+          <text x={CX} y={CY - 4} textAnchor="middle" fill="#e5e7eb" fontSize="20" fontWeight="300">{total}</text>
+          <text x={CX} y={CY + 10} textAnchor="middle" fill="#6b7280" fontSize="7" letterSpacing="1.5">ORGS</text>
+        </>)}
       </svg>
 
       {/* Legend */}
@@ -378,38 +339,40 @@ export default function ObservatoryPage() {
 
       {!loading && !error && stats && (
         <>
-          {/* ── Hero: gauge + key metrics ── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-
-            {/* Circular gauge */}
-            <div className="card flex flex-col items-center justify-center py-6 gap-1">
-              <CircularGauge score={stats.avg_score} />
-              <p className="text-[10px] text-muted tracking-wider uppercase mt-1">Global Average</p>
+          {/* ── Hero: 4 metric cards ── */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <Link to="/explore" className="card px-4 py-4 flex flex-col justify-center hover:ring-1 hover:ring-accent/30 transition-all group">
+              <div className="text-2xl font-light text-primary group-hover:text-accent transition-colors">{stats.total_scored ?? stats.active_domains}</div>
+              <div className="stat-label">Organisations</div>
+              <div className="text-[10px] text-muted mt-1">S&P 500 + STOXX 600</div>
+            </Link>
+            <div className="card px-4 py-4 flex flex-col justify-center">
+              {(() => {
+                const s = stats.avg_score
+                const color = s >= 80 ? 'text-signal' : s >= 40 ? 'text-warn' : 'text-critical'
+                const tier  = s >= 80 ? 'PQC-Active' : s >= 40 ? 'Transitioning' : 'Legacy'
+                return (<>
+                  <div className={`text-2xl font-light font-mono ${color}`}>{s ?? '—'}</div>
+                  <div className="stat-label">Avg Score</div>
+                  <div className={`text-[10px] mt-1 ${color}`}>{tier}</div>
+                </>)
+              })()}
             </div>
-
-            {/* 3 metric cards */}
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Link to="/explore" className="card px-4 py-4 flex flex-col justify-center hover:ring-1 hover:ring-accent/30 transition-all group">
-                <div className="text-2xl font-light text-primary group-hover:text-accent transition-colors">{stats.total_scored ?? stats.active_domains}</div>
-                <div className="stat-label">Organisations Scored</div>
-                <div className="text-[10px] text-muted mt-1">S&P 500 + STOXX 600 → Explorer</div>
-              </Link>
-              <div className="card px-4 py-4 flex flex-col justify-center">
-                <div className="text-2xl font-light text-signal">
-                  {stats.pqc_ready?.count ?? 0}
-                  <span className="text-sm text-muted font-normal ml-1">({stats.pqc_ready?.pct ?? 0}%)</span>
-                </div>
-                <div className="stat-label">PQC-Active</div>
-                <div className="text-[10px] text-muted mt-1">Hybrid KEM deployed</div>
+            <div className="card px-4 py-4 flex flex-col justify-center">
+              <div className="text-2xl font-light text-signal">
+                {stats.pqc_ready?.count ?? 0}
+                <span className="text-sm text-muted font-normal ml-1">({stats.pqc_ready?.pct ?? 0}%)</span>
               </div>
-              <div className="card px-4 py-4 flex flex-col justify-center">
-                <div className="text-2xl font-light text-critical">
-                  {stats.pqc_legacy?.count ?? 0}
-                  <span className="text-sm text-muted font-normal ml-1">({stats.pqc_legacy?.pct ?? 0}%)</span>
-                </div>
-                <div className="stat-label">Legacy</div>
-                <div className="text-[10px] text-muted mt-1">No PQC key exchange</div>
+              <div className="stat-label">PQC-Active</div>
+              <div className="text-[10px] text-muted mt-1">Hybrid KEM deployed</div>
+            </div>
+            <div className="card px-4 py-4 flex flex-col justify-center">
+              <div className="text-2xl font-light text-critical">
+                {stats.pqc_legacy?.count ?? 0}
+                <span className="text-sm text-muted font-normal ml-1">({stats.pqc_legacy?.pct ?? 0}%)</span>
               </div>
+              <div className="stat-label">Legacy</div>
+              <div className="text-[10px] text-muted mt-1">No PQC key exchange</div>
             </div>
           </div>
 
@@ -438,7 +401,7 @@ export default function ObservatoryPage() {
             <div className="card overflow-hidden">
               <div className="px-4 py-3 border-b border-void section-title">Score Distribution</div>
               <div className="px-5 py-5">
-                <DonutChart data={stats.score_distribution} />
+                <DonutChart data={stats.score_distribution} avgScore={stats.avg_score} />
               </div>
             </div>
           </div>
