@@ -397,7 +397,7 @@ export default function ObservatoryPage() {
               </div>
             </div>
 
-            <div className="card overflow-hidden">
+            <div className="card">
               <div className="px-4 py-3 border-b border-void section-title">Score Distribution</div>
               <div className="px-5 py-5">
                 <DonutChart data={stats.score_distribution} avgScore={stats.avg_score} />
