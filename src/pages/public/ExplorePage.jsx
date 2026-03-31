@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, Filter, Globe2, RefreshCw } from 'lucide-react'
+import { Search, Filter, Globe2, RefreshCw, ChevronUp, ChevronDown } from 'lucide-react'
 import { useApi } from '../../hooks/useApi.js'
 import { api, unwrap } from '../../lib/api.js'
 import { LoadingState, ErrorState, EmptyState, StatusBadge, ScoreBadge, ActiveBadge, Pill } from '../../components/shared/UI.jsx'
@@ -16,6 +16,16 @@ export default function ExplorePage() {
   const [country, setCountry] = useState(() => searchParams.get('country') || '')
   const [sector, setSector] = useState(() => searchParams.get('sector') || '')
   const [activeFilter, setActiveFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('domain')
+  const [sortDir, setSortDir] = useState('asc')
+
+  const toggleSort = useCallback((col) => {
+    setSortBy(prev => {
+      if (prev === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+      else { setSortDir('asc') }
+      return col
+    })
+  }, [])
 
   const allDomains = useMemo(() => domains || [], [domains])
 
@@ -47,6 +57,28 @@ export default function ExplorePage() {
     })
     return map
   }, [domainTests])
+
+  // Enrich + sort
+  const sortedRows = useMemo(() => {
+    const rows = filtered.map(d => {
+      const tests = testsMap[d.id] || []
+      const latest = [...tests].sort((a, b) => new Date(b.last_run_at || 0) - new Date(a.last_run_at || 0))[0]
+      return { ...d, _tests: tests, _score: latest?.last_score ?? null, _status: latest?.last_status ?? null }
+    })
+    const dir = sortDir === 'asc' ? 1 : -1
+    return rows.sort((a, b) => {
+      switch (sortBy) {
+        case 'domain':   return dir * (a.domain || '').localeCompare(b.domain || '')
+        case 'company':  return dir * (a.company_name || '').localeCompare(b.company_name || '')
+        case 'country':  return dir * (a.country || '').localeCompare(b.country || '')
+        case 'sector':   return dir * (a.sector || '').localeCompare(b.sector || '')
+        case 'tests':    return dir * (a._tests.length - b._tests.length)
+        case 'score':    return dir * ((a._score ?? -1) - (b._score ?? -1))
+        case 'added':    return dir * (new Date(a.created_at || 0) - new Date(b.created_at || 0))
+        default: return 0
+      }
+    })
+  }, [filtered, testsMap, sortBy, sortDir])
 
   // Stats
   const stats = useMemo(() => ({
@@ -197,57 +229,68 @@ export default function ExplorePage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-void">
-                    <th className="table-header text-left">Domain</th>
-                    <th className="table-header text-left hidden md:table-cell">Organisation</th>
-                    <th className="table-header text-left hidden lg:table-cell">Country</th>
-                    <th className="table-header text-left hidden lg:table-cell">Sector</th>
-                    <th className="table-header text-center">Tests</th>
-                    <th className="table-header text-center">Last Result</th>
-                    <th className="table-header text-center">Status</th>
-                    <th className="table-header text-left hidden xl:table-cell">Added</th>
-                    <th className="table-header" />
+                    {[
+                      { col: 'domain',   label: 'Domain',       cls: 'text-left' },
+                      { col: 'company',  label: 'Organisation',  cls: 'text-left hidden md:table-cell' },
+                      { col: 'country',  label: 'Country',       cls: 'text-left hidden lg:table-cell' },
+                      { col: 'sector',   label: 'Sector',        cls: 'text-left hidden lg:table-cell' },
+                      { col: 'tests',    label: 'Tests',         cls: 'text-center' },
+                      { col: 'score',    label: 'Last Score',    cls: 'text-center' },
+                      { col: null,       label: 'Status',        cls: 'text-center' },
+                      { col: 'added',    label: 'Added',         cls: 'text-left hidden xl:table-cell' },
+                      { col: null,       label: '',              cls: '' },
+                    ].map(({ col, label, cls }, i) => (
+                      <th
+                        key={i}
+                        className={`table-header ${cls} ${col ? 'cursor-pointer select-none hover:text-secondary transition-colors' : ''}`}
+                        onClick={col ? () => toggleSort(col) : undefined}
+                      >
+                        {label && (
+                          <span className="inline-flex items-center gap-1">
+                            {label}
+                            {col && sortBy === col
+                              ? sortDir === 'asc'
+                                ? <ChevronUp size={10} className="text-accent" />
+                                : <ChevronDown size={10} className="text-accent" />
+                              : col ? <ChevronUp size={10} className="opacity-0 group-hover:opacity-30" /> : null
+                            }
+                          </span>
+                        )}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(d => {
-                    const tests = testsMap[d.id] || []
-                    const lastStatus = tests.length > 0
-                      ? tests.sort((a, b) => new Date(b.last_run_at || 0) - new Date(a.last_run_at || 0))[0]?.last_status
-                      : null
-                    const lastScore = tests.length > 0
-                      ? tests.sort((a, b) => new Date(b.last_run_at || 0) - new Date(a.last_run_at || 0))[0]?.last_score
-                      : null
-                    return (
-                      <tr key={d.id} className="table-row">
-                        <td className="table-cell">
-                          <Link to={`/domain/${d.id}`} className="text-primary hover:text-accent transition-colors text-xs font-medium">
-                            {d.domain}
-                          </Link>
-                        </td>
-                        <td className="table-cell hidden md:table-cell text-xs">{d.company_name || '—'}</td>
-                        <td className="table-cell hidden lg:table-cell text-xs">{d.country || '—'}</td>
-                        <td className="table-cell hidden lg:table-cell text-xs">{d.sector || '—'}</td>
-                        <td className="table-cell text-center text-xs">{tests.length || '—'}</td>
-                        <td className="table-cell text-center">
-                          {lastScore !== null && lastScore !== undefined
-                            ? <ScoreBadge score={lastScore} />
-                            : lastStatus
-                            ? <StatusBadge status={lastStatus} />
-                            : <span className="text-muted text-xs">—</span>
-                          }
-                        </td>
-                        <td className="table-cell text-center"><ActiveBadge active={d.active !== false} /></td>
-                        <td className="table-cell hidden xl:table-cell text-xs">
-                          {formatDateShort(d.created_at || d.createdAt)}
-                        </td>
-                        <td className="table-cell">
-                          <Link to={`/domain/${d.id}`} className="text-xs text-accent/60 hover:text-accent transition-colors">
-                            View →
-                          </Link>
-                        </td>
-                      </tr>
-                    )
-                  })}
+                  {sortedRows.map(d => (
+                    <tr key={d.id} className="table-row">
+                      <td className="table-cell">
+                        <Link to={`/domain/${d.id}`} className="text-primary hover:text-accent transition-colors text-xs font-medium">
+                          {d.domain}
+                        </Link>
+                      </td>
+                      <td className="table-cell hidden md:table-cell text-xs">{d.company_name || '—'}</td>
+                      <td className="table-cell hidden lg:table-cell text-xs">{d.country || '—'}</td>
+                      <td className="table-cell hidden lg:table-cell text-xs">{d.sector || '—'}</td>
+                      <td className="table-cell text-center text-xs">{d._tests.length || '—'}</td>
+                      <td className="table-cell text-center">
+                        {d._score !== null && d._score !== undefined
+                          ? <ScoreBadge score={d._score} />
+                          : d._status
+                          ? <StatusBadge status={d._status} />
+                          : <span className="text-muted text-xs">—</span>
+                        }
+                      </td>
+                      <td className="table-cell text-center"><ActiveBadge active={d.active !== false} /></td>
+                      <td className="table-cell hidden xl:table-cell text-xs">
+                        {formatDateShort(d.created_at || d.createdAt)}
+                      </td>
+                      <td className="table-cell">
+                        <Link to={`/domain/${d.id}`} className="text-xs text-accent/60 hover:text-accent transition-colors">
+                          View →
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

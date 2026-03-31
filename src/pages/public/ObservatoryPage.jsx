@@ -77,53 +77,103 @@ function ScoreBar({ value, max, color = 'var(--accent)' }) {
   )
 }
 
-// ── Distribution chart ────────────────────────────────────────────────────────
+// ── Donut distribution chart ──────────────────────────────────────────────────
 
-function DistributionChart({ data }) {
+function DonutChart({ data }) {
   const [hovered, setHovered] = useState(null)
   if (!data?.length) return null
 
   const tierMeta = { legacy: SCORE_TIERS[0], transitioning: SCORE_TIERS[1], pqc_active: SCORE_TIERS[2] }
-  const max = Math.max(...data.map(d => d.count), 1)
-  const W = 360, H = 90, BAR_W = 90, GAP = 22
-  const totalWidth = data.length * BAR_W + (data.length - 1) * GAP
-  const offsetX = (W - totalWidth) / 2
+  const total = data.reduce((s, d) => s + d.count, 0)
+  if (!total) return null
+
+  const CX = 70, CY = 70, R_OUT = 56, R_IN = 36, GAP = 2.5
+
+  const toRad = deg => (deg - 90) * Math.PI / 180
+  const pt = (r, deg) => [
+    (CX + r * Math.cos(toRad(deg))).toFixed(2),
+    (CY + r * Math.sin(toRad(deg))).toFixed(2),
+  ].join(' ')
+
+  const arcPath = (s, e) => {
+    const large = (e - s) > 180 ? 1 : 0
+    return [
+      `M ${pt(R_OUT, s)}`,
+      `A ${R_OUT} ${R_OUT} 0 ${large} 1 ${pt(R_OUT, e)}`,
+      `L ${pt(R_IN, e)}`,
+      `A ${R_IN} ${R_IN} 0 ${large} 0 ${pt(R_IN, s)}`,
+      'Z',
+    ].join(' ')
+  }
+
+  // Build segments (skip zero-count tiers)
+  let cursor = 0
+  const segments = data
+    .filter(d => d.count > 0)
+    .map(d => {
+      const sweep = (d.count / total) * 360
+      const s = cursor + GAP / 2
+      const e = cursor + sweep - GAP / 2
+      cursor += sweep
+      return { ...d, s, e, pct: Math.round(d.count / total * 100) }
+    })
 
   return (
-    <div className="relative w-full">
-      <svg viewBox={`0 0 ${W} ${H + 24}`} className="w-full max-w-sm mx-auto">
-        {data.map((d, i) => {
-          const meta = tierMeta[d.key] || {}
-          const h = Math.max(3, Math.round((d.count / max) * H))
-          const x = offsetX + i * (BAR_W + GAP)
-          const color = meta.color || '#6b7280'
+    <div className="relative flex flex-col items-center gap-4">
+      <svg viewBox="0 0 140 140" className="w-40 h-40">
+        {segments.map((seg, i) => {
+          const meta = tierMeta[seg.key] || {}
           return (
-            <g key={d.key || d.label}
+            <path
+              key={seg.key}
+              d={arcPath(seg.s, seg.e)}
+              fill={meta.color || '#6b7280'}
+              opacity={hovered === null ? 0.85 : hovered === i ? 1 : 0.35}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
-              style={{ cursor: 'default' }}
-            >
-              <rect x={x} y={H - h} width={BAR_W} height={h}
-                fill={color} opacity={hovered === i ? 1 : 0.75} rx={3} />
-              <text x={x + BAR_W / 2} y={H + 12} textAnchor="middle" fill="#6b7280" fontSize={9}>{d.label}</text>
-              <text x={x + BAR_W / 2} y={H - h - 4} textAnchor="middle"
-                fill={color} fontSize={10} fontWeight="500">{d.count}</text>
-            </g>
+              style={{ cursor: 'pointer', transition: 'opacity 0.15s' }}
+            />
           )
         })}
+        {/* Center */}
+        <text x={CX} y={CY - 5} textAnchor="middle" fill="#e5e7eb" fontSize="20" fontWeight="300">{total}</text>
+        <text x={CX} y={CY + 9} textAnchor="middle" fill="#6b7280" fontSize="7" letterSpacing="1.5">SCORED</text>
       </svg>
-      {hovered !== null && data[hovered] && (() => {
-        const d = data[hovered]
-        const meta = tierMeta[d.key] || {}
+
+      {/* Legend */}
+      <div className="w-full space-y-1.5">
+        {segments.map((seg, i) => {
+          const meta = tierMeta[seg.key] || {}
+          return (
+            <div
+              key={seg.key}
+              className="flex items-center gap-2 px-1 py-0.5 rounded transition-colors cursor-default"
+              style={{ opacity: hovered === null || hovered === i ? 1 : 0.4 }}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: meta.color }} />
+              <span className="text-[11px] text-secondary flex-1">{seg.label}</span>
+              <span className="text-[11px] font-mono text-primary">{seg.count}</span>
+              <span className="text-[10px] text-muted w-8 text-right">{seg.pct}%</span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Hover tooltip */}
+      {hovered !== null && segments[hovered] && (() => {
+        const seg = segments[hovered]
+        const meta = tierMeta[seg.key] || {}
         return (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-surface border border-void rounded px-3 py-2 shadow-lg pointer-events-none z-10">
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full w-60 bg-surface border border-void rounded px-3 py-2 shadow-lg pointer-events-none z-10">
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: meta.color }} />
-              <span className="text-xs font-medium text-primary">{d.label}</span>
+              <span className="text-xs font-medium text-primary">{seg.label}</span>
               <span className="text-xs text-muted ml-auto font-mono">{meta.range}</span>
             </div>
             <p className="text-[10px] text-secondary leading-relaxed">{meta.desc}</p>
-            <div className="mt-1.5 text-[10px] text-muted">{d.count} organisation{d.count !== 1 ? 's' : ''}</div>
+            <div className="mt-1.5 text-[10px] text-muted">{seg.count} organisations · {seg.pct}%</div>
           </div>
         )
       })()}
@@ -339,11 +389,11 @@ export default function ObservatoryPage() {
 
             {/* 3 metric cards */}
             <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="card px-4 py-4 flex flex-col justify-center">
-                <div className="text-2xl font-light text-primary">{stats.total_scored ?? stats.active_domains}</div>
+              <Link to="/explore" className="card px-4 py-4 flex flex-col justify-center hover:ring-1 hover:ring-accent/30 transition-all group">
+                <div className="text-2xl font-light text-primary group-hover:text-accent transition-colors">{stats.total_scored ?? stats.active_domains}</div>
                 <div className="stat-label">Organisations Scored</div>
-                <div className="text-[10px] text-muted mt-1">S&P 500 + STOXX 600</div>
-              </div>
+                <div className="text-[10px] text-muted mt-1">S&P 500 + STOXX 600 → Explorer</div>
+              </Link>
               <div className="card px-4 py-4 flex flex-col justify-center">
                 <div className="text-2xl font-light text-signal">
                   {stats.pqc_ready?.count ?? 0}
@@ -387,20 +437,8 @@ export default function ObservatoryPage() {
 
             <div className="card overflow-hidden">
               <div className="px-4 py-3 border-b border-void section-title">Score Distribution</div>
-              <div className="px-4 py-6 flex flex-col items-center gap-4">
-                <DistributionChart data={stats.score_distribution} />
-                <div className="w-full grid grid-cols-3 gap-2">
-                  {[
-                    { label: 'PQC-Active',    key: 'pqc_ready',   color: 'text-signal'   },
-                    { label: 'Transitioning', key: 'pqc_partial', color: 'text-warn'     },
-                    { label: 'Legacy',        key: 'pqc_legacy',  color: 'text-critical' },
-                  ].map(b => (
-                    <div key={b.key} className="text-center">
-                      <div className={`text-lg font-light ${b.color}`}>{stats[b.key]?.pct ?? 0}%</div>
-                      <div className="text-[10px] text-muted tracking-wider uppercase">{b.label}</div>
-                    </div>
-                  ))}
-                </div>
+              <div className="px-5 py-5">
+                <DonutChart data={stats.score_distribution} />
               </div>
             </div>
           </div>
