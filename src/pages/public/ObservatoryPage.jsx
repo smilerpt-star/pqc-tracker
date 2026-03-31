@@ -38,7 +38,7 @@ function DonutChart({ data, avgScore }) {
   const total = data.reduce((s, d) => s + d.count, 0)
   if (!total) return null
 
-  const CX = 70, CY = 70, R_OUT = 60, R_IN = 43
+  const CX = 70, CY = 70, R_OUT = 60, R_IN = 46
 
   const toRad = deg => (deg - 90) * Math.PI / 180
   const pt = (r, deg) => [
@@ -96,8 +96,6 @@ function DonutChart({ data, avgScore }) {
               fontSize="32" fontWeight="200" fontFamily="monospace">{avgScore}</text>
             <text x={CX} y={CY + 24} textAnchor="middle" fill="#374151"
               fontSize="6" letterSpacing="1.8">AVG SCORE</text>
-            <text x={CX} y={CY - 12} textAnchor="middle" fill="#4b5563"
-              fontSize="6.5" letterSpacing="0.5">{total} orgs scored</text>
           </>)
         })() : (<>
           <text x={CX} y={CY + 6}  textAnchor="middle" fill="#e5e7eb" fontSize="22" fontWeight="300">{total}</text>
