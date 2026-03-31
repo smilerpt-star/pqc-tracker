@@ -90,11 +90,11 @@ function DonutChart({ data, avgScore }) {
         })}
         {/* Center: avg score + org count */}
         {avgScore !== null && avgScore !== undefined ? (() => {
-          const c = avgScore >= 80 ? '#00ff88' : avgScore >= 40 ? '#f59e0b' : '#ef4444'
+          const c = avgScore >= 80 ? '#00ff88' : avgScore >= 40 ? '#fcd34d' : '#fca5a5'
           return (<>
             <text x={CX} y={CY + 10} textAnchor="middle" fill={c}
-              fontSize="32" fontWeight="200" fontFamily="monospace">{avgScore}</text>
-            <text x={CX} y={CY + 24} textAnchor="middle" fill="#374151"
+              fontSize="32" fontWeight="300" fontFamily="monospace">{avgScore}</text>
+            <text x={CX} y={CY + 24} textAnchor="middle" fill="#6b7280"
               fontSize="6" letterSpacing="1.8">AVG SCORE</text>
           </>)
         })() : (<>
