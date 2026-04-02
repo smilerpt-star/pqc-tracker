@@ -14,6 +14,15 @@ function ScoreGauge({ score }) {
   return <span className="font-mono text-sm" style={{ color }}>{score}</span>
 }
 
+// ── Day-over-day delta indicator ───────────────────────────────────────────────
+
+function DeltaBadge({ delta }) {
+  if (delta === null || delta === undefined) return null
+  if (delta > 0) return <span className="text-[10px] text-signal leading-none">▲{delta}</span>
+  if (delta < 0) return <span className="text-[10px] text-critical leading-none">▼{Math.abs(delta)}</span>
+  return null
+}
+
 // ── Horizontal bar ─────────────────────────────────────────────────────────────
 
 function ScoreBar({ value, max, color = 'var(--accent)' }) {
@@ -451,6 +460,7 @@ export default function ObservatoryPage() {
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-secondary truncate group-hover:text-primary transition-colors">{row.country}</span>
                         <div className="flex items-center gap-2">
+                          <DeltaBadge delta={row.delta_1d} />
                           <ScoreGauge score={row.avg_score} />
                           <ArrowRight size={10} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
@@ -477,6 +487,7 @@ export default function ObservatoryPage() {
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-secondary truncate group-hover:text-primary transition-colors">{row.sector}</span>
                         <div className="flex items-center gap-2">
+                          <DeltaBadge delta={row.delta_1d} />
                           <ScoreGauge score={row.avg_score} />
                           <ArrowRight size={10} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
