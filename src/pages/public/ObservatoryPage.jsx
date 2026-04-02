@@ -174,15 +174,6 @@ function TrendChart({ stats, period }) {
     </div>
   )
 
-  if (data.length === 1) return (
-    <div className="text-xs text-muted text-center py-10 leading-relaxed">
-      Only 1 {period === 'daily' ? 'day' : period === 'weekly' ? 'week' : 'month'} of data so far
-      — avg score <span className="font-mono text-primary">{data[0].avg_score}</span> from {data[0].count} scans.
-      <br />
-      <span className="text-[10px] tracking-wider">Chart will appear as more data accumulates.</span>
-    </div>
-  )
-
   const W = 520, H = 130, PAD_L = 28, PAD_R = 16, PAD_T = 14, PAD_B = 24
   const iW = W - PAD_L - PAD_R
   const iH = H - PAD_T - PAD_B
