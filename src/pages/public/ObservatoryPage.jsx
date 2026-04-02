@@ -137,6 +137,7 @@ function DonutChart({ data, avgScore }) {
         })() : (
           <p className="text-[10px] text-muted">Hover a segment for details.</p>
         )}
+      </div>
     </div>
   )
 }
@@ -170,6 +171,15 @@ function TrendChart({ stats, period }) {
   if (!data.length) return (
     <div className="text-xs text-muted text-center py-10 tracking-wider uppercase">
       No {period} data yet — more scans needed
+    </div>
+  )
+
+  if (data.length === 1) return (
+    <div className="text-xs text-muted text-center py-10 leading-relaxed">
+      Only 1 {period === 'daily' ? 'day' : period === 'weekly' ? 'week' : 'month'} of data so far
+      — avg score <span className="font-mono text-primary">{data[0].avg_score}</span> from {data[0].count} scans.
+      <br />
+      <span className="text-[10px] tracking-wider">Chart will appear as more data accumulates.</span>
     </div>
   )
 
@@ -301,7 +311,7 @@ export default function ObservatoryPage() {
   const navigate = useNavigate()
   const { data: statsData, loading, error, reload } = useApi(() => api.getStats())
   const stats = statsData?.data || statsData || null
-  const [trendPeriod, setTrendPeriod] = useState('weekly')
+  const [trendPeriod, setTrendPeriod] = useState('daily')
 
   const topCountries = useMemo(() =>
     (stats?.by_country || []).filter(r => r.scored > 0).sort((a, b) => (b.avg_score ?? -1) - (a.avg_score ?? -1)).slice(0, 15),

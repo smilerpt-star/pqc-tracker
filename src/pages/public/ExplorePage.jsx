@@ -234,7 +234,7 @@ export default function ExplorePage() {
                       { col: 'company',  label: 'Organisation',  cls: 'text-left hidden md:table-cell' },
                       { col: 'country',  label: 'Country',       cls: 'text-left hidden lg:table-cell' },
                       { col: 'sector',   label: 'Sector',        cls: 'text-left hidden lg:table-cell' },
-                      { col: 'tests',    label: 'Tests',         cls: 'text-center' },
+                      { col: 'tests',    label: 'Scan Types',    cls: 'text-center' },
                       { col: 'score',    label: 'Last Score',    cls: 'text-center' },
                       { col: null,       label: 'Status',        cls: 'text-center' },
                       { col: 'added',    label: 'Added',         cls: 'text-left hidden xl:table-cell' },

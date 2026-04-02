@@ -153,7 +153,7 @@ export default function DomainDetailPage() {
       {/* Meta cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="card p-4">
-          <div className="stat-label mb-2">Configured Tests</div>
+          <div className="stat-label mb-2">Scan Types</div>
           <div className="text-xl font-light text-primary">{tests.length}</div>
         </div>
         <div className="card p-4">
