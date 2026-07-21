@@ -4,25 +4,59 @@ export function getToken() { return localStorage.getItem('admin_token') }
 export function setToken(t) { localStorage.setItem('admin_token', t) }
 export function clearToken() { localStorage.removeItem('admin_token') }
 
+// Cold-start tolerance: Railway may return 502/503/504 (or the socket may hang)
+// for a few seconds while the backend spins up. Retry those transparently so the
+// UI shows a slightly longer loading state instead of an error / empty tables.
+const MAX_RETRIES = 4
+const PER_ATTEMPT_TIMEOUT_MS = 15000
+const COLD_START_STATUSES = new Set([502, 503, 504])
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
 async function request(path, options = {}) {
   const url = `${BASE}${path}`
   const token = getToken()
-  const res = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-    ...options,
-  })
-  if (!res.ok) {
-    let msg = `HTTP ${res.status}`
-    try { const body = await res.json(); msg = body.message || body.error || msg } catch {}
-    throw new Error(msg)
+
+  for (let attempt = 0; ; attempt++) {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), PER_ATTEMPT_TIMEOUT_MS)
+    try {
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          ...options.headers,
+        },
+        ...options,
+      })
+
+      if (!res.ok) {
+        // Retry transient cold-start statuses; surface everything else immediately.
+        if (COLD_START_STATUSES.has(res.status) && attempt < MAX_RETRIES) {
+          await sleep(Math.min(1000 * 2 ** attempt, 8000))
+          continue
+        }
+        let msg = `HTTP ${res.status}`
+        try { const body = await res.json(); msg = body.message || body.error || msg } catch {}
+        throw new Error(msg)
+      }
+
+      const text = await res.text()
+      if (!text) return null
+      return JSON.parse(text)
+    } catch (e) {
+      // Network error or aborted timeout — likely the backend is still waking up.
+      const isTransient = e.name === 'AbortError' || e.name === 'TypeError'
+      if (isTransient && attempt < MAX_RETRIES) {
+        await sleep(Math.min(1000 * 2 ** attempt, 8000))
+        continue
+      }
+      throw e
+    } finally {
+      clearTimeout(timer)
+    }
   }
-  const text = await res.text()
-  if (!text) return null
-  return JSON.parse(text)
 }
 
 export const api = {
