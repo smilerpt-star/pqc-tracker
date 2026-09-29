@@ -8,7 +8,9 @@ export function clearToken() { localStorage.removeItem('admin_token') }
 // for a few seconds while the backend spins up. Retry those transparently so the
 // UI shows a slightly longer loading state instead of an error / empty tables.
 const MAX_RETRIES = 4
-const PER_ATTEMPT_TIMEOUT_MS = 15000
+// /stats aggregates a year of test_runs and can take 20-30s; keep the per-attempt
+// timeout above that so the Observatory reliably completes instead of aborting.
+const PER_ATTEMPT_TIMEOUT_MS = 40000
 const COLD_START_STATUSES = new Set([502, 503, 504])
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
